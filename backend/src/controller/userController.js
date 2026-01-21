@@ -1,0 +1,361 @@
+import {
+  authGoogleService,
+  loginService,
+  signupService,
+  verifyEmailService,
+  resetPassSendOTPService,
+  resetPassVerifyOTPService,
+  resetPasswordService,
+  logoutService,
+  refreshAccessTokenService,
+  avatarService,
+} from '../services/userServices.js';
+import ApiError from '../utils/ApiError.js';
+import {
+  authGoogleSchema,
+  loginSchema,
+  resetPassSendOTPSchema,
+  resetPassVerifyOTPSchema,
+  resetPasswordSchema,
+  signupSchema,
+  verifyEmailSchema,
+} from '../validations/user.validation.js';
+
+export const home = (req, res) => {
+  const user = req.user;
+  // console.log(user._id);
+
+  return res.status(200).json({
+    message: 'User is verified',
+  });
+};
+
+// Signin
+export const signup = async (req, res) => {
+  try {
+    const { firstName, lastName, email, password } = req.body;
+
+    const { error } = signupSchema.validate({
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.details[0].message);
+    }
+
+    const user = await signupService(firstName, lastName, email, password);
+
+    return res.status(201).json({
+      success: true,
+      user,
+      message: 'Verify the email in next step',
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('Signup error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const verifyUserEmail = async (req, res) => {
+  try {
+    const { error } = verifyEmailSchema.validate({
+      email: req.body.email,
+      userOtp: req.body.userOtp,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.details[0].message);
+    }
+
+    const response = await verifyEmailService(req.body.email, req.body.userOtp);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Email Verified Successfully',
+      user: response.cleanUser,
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('Verify email error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+//login
+export const login = async (req, res) => {
+  // get all fields
+  // check if fields are empty or not
+  // then check user exist or not
+  // check password is correct or not
+  // remove password from response
+  // send response
+
+  try {
+    console.log('login');
+
+    const { error } = loginSchema.validate({
+      email: req.body.email,
+      password: req.body.password,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.details[0].message);
+    }
+
+    const response = await loginService(req.body.email, req.body.password);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Successfully logged in',
+      user: response.loggedUser,
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('Login error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+//login
+export const authGoogle = async (req, res) => {
+  try {
+    const { error } = authGoogleSchema.validate({
+      googleToken: req.body.googleToken,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.details[0].message);
+    }
+
+    const response = await authGoogleService(req.body.googleToken);
+
+    return res.status(200).json({
+      success: true,
+      message: 'User auth successful via google',
+      user: response.user,
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('AuthGoogle error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    // console.log(req.user?._id);
+    const response = await logoutService(req.user?._id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
+      refreshToken: response.refreshToken,
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('Logout error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const resetPassSendOTP = async (req, res) => {
+  try {
+    const { error } = resetPassSendOTPSchema.validate({
+      email: req.body.email,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.details[0].message);
+    }
+
+    const response = await resetPassSendOTPService(req.body.email);
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP is sent to your email for reset the password.',
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('Reset password send otp error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const resetPassVerifyOTP = async (req, res) => {
+  try {
+    const { error } = resetPassVerifyOTPSchema.validate({
+      email: req.body.email,
+      userOtp: req.body.userOtp,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.details[0].message);
+    }
+
+    const response = await resetPassVerifyOTPService(
+      req.body.email,
+      req.body.userOtp,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Reset token',
+      resetToken: response.resetToken,
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('Reset password otp verify error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { error } = resetPasswordSchema.validate({
+      userResetToken: req.body.userResetToken,
+      newPassword: req.body.newPassword,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.details[0].message);
+    }
+
+    const response = await resetPasswordService(
+      req.body.userResetToken,
+      req.body.newPassword,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password successfully changed',
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('Reset password error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const refreshAccessToken = async (req, res) => {
+  try {
+    // console.log(req.body);
+
+    const response = await refreshAccessTokenService(req.body.refreshToken);
+
+    return res.status(200).json({
+      success: true,
+      accessToken: response.accessToken,
+      user: response.user,
+      message: 'Access token refreshed',
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('Refresh access token error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const avatar = async (req, res) => {
+  try {
+    const response = await avatarService(req.files?.avatar, req.user?._id);
+    return res.status(200).json({
+      success: true,
+      avatar: response.avatarUrl,
+      message: 'File uploaded',
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('Upload avatar error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+};
