@@ -31,7 +31,7 @@ const InviteRedirect = () => {
     } catch (error) {
       console.log(error);
       if (error.response.status === 401) {
-        toast.error('Invalid Token', {
+        toast.error(error?.message || 'Invalid Token', {
           position: 'top-center',
           theme: 'colored',
           autoClose: 3000,

@@ -20,7 +20,7 @@ const Home = () => {
         <ToastContainer
           position="top-center"
           theme="colored"
-          style={{ width: '20px' }}
+          // style={{ width: '20px' }}
         />
       </div>
     </div>
