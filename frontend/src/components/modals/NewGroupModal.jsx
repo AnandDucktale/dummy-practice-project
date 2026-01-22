@@ -1,6 +1,7 @@
-import defaultGroupIcon from '../../assets/group-icon.png';
 import { TiPencil } from 'react-icons/ti';
 import { IoClose } from 'react-icons/io5';
+
+import defaultGroupIcon from '../../assets/group-icon.png';
 
 const NewGroupModal = ({
   onClose,

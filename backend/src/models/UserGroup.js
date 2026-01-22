@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 const { Schema, model } = mongoose;
 
 const userGroupSchema = new Schema(
@@ -12,7 +13,7 @@ const userGroupSchema = new Schema(
       ref: 'Group',
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const UserGroup = model('UserGroup', userGroupSchema);

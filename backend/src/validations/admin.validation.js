@@ -1,4 +1,5 @@
 import Joi from 'joi';
+
 import { objectId, pagination } from './common.validation.js';
 
 export const deleteUserSchema = Joi.object({

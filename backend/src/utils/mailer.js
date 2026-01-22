@@ -1,6 +1,9 @@
 import nodemailer from 'nodemailer';
 
-// Create reusable transporter
+import logger from '../logger.js';
+import ApiError from './ApiError.js';
+
+// Creating reusable transporter
 function createTransporter(port, secure) {
   return nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
@@ -33,19 +36,20 @@ async function sendOTPEmail(email, otp) {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log('OTP email sent to:', email);
+    logger.info(email, 'OTP email sent to email: ');
   } catch (error) {
-    console.error('Error sending email with port 587:', error.message);
+    logger.error(error.message, 'Error sending email with port 587:');
 
     // Retry with port 465 if 587 fails
-    console.log('Retrying with port 465...');
+    logger.info('Retrying with port 465...');
     transporter = createTransporter(465, true);
 
     try {
       await transporter.sendMail(mailOptions);
-      console.log('OTP email sent via port 587 to:', email);
+      logger.info(email, 'OTP email sent via port 587 to:');
     } catch (retryError) {
-      console.error('Retry also failed:', retryError.message);
+      logger.error(retryError.message, 'Retry also failed:');
+      throw new ApiError(500, 'Retry also failed: ');
     }
   }
 }

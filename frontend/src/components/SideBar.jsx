@@ -1,10 +1,12 @@
-import useAuthStore from '../hooks/store/useAuthStore.jsx';
 import { NavLink, useNavigate } from 'react-router-dom';
+
+import useAuthStore from '../hooks/store/useAuthStore.jsx';
 import api from '../api/axios.js';
 
 const SideBar = () => {
   const { user, clearAuth } = useAuthStore();
   const navigate = useNavigate();
+  console.log(user);
 
   const baseClass =
     'tracking-widest text-xs uppercase text-center p-4 transition-all';

@@ -1,5 +1,7 @@
 import express from 'express';
+
 import verifyJWT from '../middleware/authenticationMiddleware.js';
+
 import {
   contacts,
   searchContacts,
@@ -7,6 +9,7 @@ import {
   editContact,
   addContact,
 } from '../controller/contactController.js';
+
 const router = express.Router();
 
 router.get('/', verifyJWT, contacts);

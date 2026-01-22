@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import api from '../api/axios';
 import { CgDanger } from 'react-icons/cg';
+
+import api from '../api/axios';
 
 const SetNewPassword = () => {
   const navigate = useNavigate();

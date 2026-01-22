@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import api from '../api/axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
 import { FaCheck, FaShare } from 'react-icons/fa';
 import { AiOutlineMenuUnfold } from 'react-icons/ai';
 import { AiOutlineMenuFold } from 'react-icons/ai';
@@ -10,32 +10,40 @@ import {
   MdKeyboardDoubleArrowLeft,
   MdKeyboardDoubleArrowRight,
 } from 'react-icons/md';
-import pdfPNG from '../assets/pdf.png';
-import useAuthStore from '../hooks/store/useAuthStore';
-import AddGroupMemberModal from '../components/modals/AddGroupMemberModal';
-import ViewGroupMemberModal from '../components/modals/ViewGroupMemberModal';
-import GroupMenu from '../components/GroupMenu';
-import RemoveGroupMemberModal from '../components/modals/RemoveGroupMemberModal';
-import { toast, ToastContainer } from 'react-toastify';
-import defaultGroupIcon from '../assets/group-icon.jpg';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { ImCross } from 'react-icons/im';
 import { TiCancel } from 'react-icons/ti';
 
+import api from '../api/axios';
+import pdfPNG from '../assets/pdf.png';
+import useAuthStore from '../hooks/store/useAuthStore.jsx';
+import AddGroupMemberModal from '../components/modals/AddGroupMemberModal';
+import ViewGroupMemberModal from '../components/modals/ViewGroupMemberModal';
+import GroupMenu from '../components/GroupMenu';
+import RemoveGroupMemberModal from '../components/modals/RemoveGroupMemberModal';
+import defaultGroupIcon from '../assets/group-icon.jpg';
+
 const GroupPage = () => {
-  const { groupId } = useParams();
-  const { user } = useAuthStore();
-  const navigate = useNavigate();
   const menuRef = useRef(null);
+
+  const { groupId } = useParams();
+
+  const navigate = useNavigate();
+
+  const { user } = useAuthStore();
+
+  // Page State
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   // Document Limit
   const docsLimit = 12;
 
+  // Groups state
   const [groupName, setGroupName] = useState('');
   const [groupIcon, setGroupIcon] = useState('');
   const [groupDetails, setGroupDetails] = useState([]);
@@ -45,14 +53,12 @@ const GroupPage = () => {
   const [inviteLink, setInviteLink] = useState('');
   const [copied, setCopied] = useState(false);
 
-  //Menu
-  const [isMenuOpen, setMenuOpen] = useState(false);
-
   // Modal
   const [viewGroupMemberModal, setViewGroupMemberModal] = useState(false);
   const [addGroupMemberModal, setAddGroupMemberModal] = useState(false);
   const [removeGroupMemberModal, setRemoveGroupMemberModal] = useState(false);
   const [isDocsPreviewModalOpen, setDocsPreviewModalOpen] = useState(false);
+  const [isMenuModalOpen, setMenuModalOpen] = useState(false);
 
   //
   const [isSelectionOpen, setSelectionOpen] = useState(false);
@@ -63,11 +69,11 @@ const GroupPage = () => {
   useEffect(() => {
     if (!groupId) return;
 
-    fetchAllUsers();
     fetchGroupDetail(groupId);
     fetchGroupMembers(groupId);
-    if ((user.role = 'admin')) {
-      fetchGroupData(groupId);
+    if (user.role === 'admin') {
+      generateInviteLink(groupId);
+      fetchAllUsers();
     }
   }, [groupId]);
 
@@ -78,7 +84,7 @@ const GroupPage = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
+        setMenuModalOpen(false);
       }
     };
 
@@ -90,25 +96,21 @@ const GroupPage = () => {
   }, []);
 
   const handleDeleteDocument = async () => {
-    // console.log('hey');
-
-    // console.log(selectedDocsIds);
-
     try {
       const response = await api.post('/group/deleteDocuments', {
         selectedDocsIds: selectedDocsIds,
       });
-      console.log(response);
+
       toast.success(response?.data.message || 'Documents deleted', {
         position: 'top-center',
         autoClose: 3000,
         theme: 'colored',
       });
+
       setSelectedDocsIds([]);
       setSelectionOpen(false);
       await fetchGroupData(groupId);
     } catch {
-      console.log(error);
       toast.error(
         error?.response?.data.message ||
           error?.message ||
@@ -123,8 +125,7 @@ const GroupPage = () => {
   };
 
   const leaveGroup = async (userId, groupId) => {
-    console.log(userId);
-    setMenuOpen(false);
+    setMenuModalOpen(false);
     try {
       const response = await api.post(
         '/group/leaveGroup',
@@ -153,10 +154,6 @@ const GroupPage = () => {
       // }, 1000);
       navigate('/groups');
     } catch (error) {
-      console.log(error);
-      // console.log(error?.response?.status);
-      // console.log(error?.response?.data.message);
-
       if (error?.response?.status === 404 || error?.response?.status === 400) {
         toast.error(error?.response?.data.message || error?.message, {
           position: 'top-center',
@@ -173,7 +170,7 @@ const GroupPage = () => {
         userId: user._id,
       };
       const response = await api.get('/group/myGroups', { params: params });
-      //   console.log(response.data?.groups);
+
       const arr = response.data?.groups;
 
       const userGroupIds = arr.map((item) => item.groupId?._id);
@@ -444,26 +441,26 @@ const GroupPage = () => {
             <h1 className="text-4xl ">{groupName}</h1>
           </div>
           <div className=" relative flex items-center justify-center p-4">
-            {isMenuOpen ? (
+            {isMenuModalOpen ? (
               <AiOutlineMenuFold
-                onClick={() => setMenuOpen(false)}
+                onClick={() => setMenuModalOpen(false)}
                 className="w-7 h-7 cursor-pointer"
               />
             ) : (
               <AiOutlineMenuUnfold
-                onClick={() => setMenuOpen(true)}
+                onClick={() => setMenuModalOpen(true)}
                 className="w-7 h-7 cursor-pointer"
               />
             )}
-            {isMenuOpen && (
+            {isMenuModalOpen && (
               <div
                 ref={menuRef}
                 className="absolute top-full right-0 mt-2 z-50"
               >
                 <GroupMenu
                   groupId={groupId}
-                  isMenuOpen={isMenuOpen}
-                  setMenuOpen={setMenuOpen}
+                  isMenuModalOpen={isMenuModalOpen}
+                  setMenuModalOpen={setMenuModalOpen}
                   setSelectedDocsIds={setSelectedDocsIds}
                   isSelectionOpen={isSelectionOpen}
                   setSelectionOpen={setSelectionOpen}

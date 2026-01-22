@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
 import { FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { MdClear } from 'react-icons/md';
 import { GrFormView } from 'react-icons/gr';
@@ -8,11 +9,11 @@ import {
   MdKeyboardDoubleArrowRight,
   MdOutlineModeEditOutline,
 } from 'react-icons/md';
+
 import api from '../api/axios';
 import ContactViewModal from '../components/modals/ContactViewModal';
 import ContactEditModal from '../components/modals/ContactEditModal';
 import AddNewContactModal from '../components/modals/AddNewContactModal';
-import { toast, ToastContainer } from 'react-toastify';
 
 const Contact = () => {
   // All Contacts
@@ -108,7 +109,7 @@ const Contact = () => {
       console.log(error);
       setError(
         error.response?.data?.message ||
-          'Error occurred on server while fetching the contacts'
+          'Error occurred on server while fetching the contacts',
       );
       toast.error(
         error?.message ||
@@ -118,7 +119,7 @@ const Contact = () => {
           position: 'top-center',
           autoClose: 3000,
           theme: 'colored',
-        }
+        },
       );
     } finally {
       setLoading(false);
@@ -140,7 +141,7 @@ const Contact = () => {
         },
         {
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
       // console.log(response);
 
@@ -157,7 +158,7 @@ const Contact = () => {
           position: 'top-center',
           theme: 'colored',
           autoClose: 3000,
-        }
+        },
       );
     }
   };
@@ -177,7 +178,7 @@ const Contact = () => {
         },
         {
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
       getContacts();
       toast.success(response.data.message, {
@@ -196,7 +197,7 @@ const Contact = () => {
           position: 'top-center',
           theme: 'colored',
           autoClose: 3000,
-        }
+        },
       );
     }
   };

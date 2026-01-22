@@ -2,10 +2,8 @@ import Contact from '../models/Contact.js';
 import Document from '../models/Document.js';
 import User from '../models/User.js';
 import UserGroup from '../models/UserGroup.js';
-import { firstName } from '../validations/common.validation.js';
 
 export const getAllUsersService = async ({ page, contactLimit, field }) => {
-  console.log(page, contactLimit, field);
   const skipContacts = (page - 1) * contactLimit;
 
   let users;
@@ -34,9 +32,6 @@ export const getAllUsersService = async ({ page, contactLimit, field }) => {
   // console.log(users);
 
   return {
-    success: true,
-    status: 200,
-    message: 'All users',
     users,
     totalPages: totalPages,
   };
@@ -71,7 +66,7 @@ export const getUserDetailService = async (userId) => {
   //   console.log(deleteUserId);
 
   const user = await User.findOne({ _id: userId }).select(
-    '_id firstName lastName email isVerified avatar role'
+    '_id firstName lastName email isVerified avatar role',
   );
   //   console.log(user);
 

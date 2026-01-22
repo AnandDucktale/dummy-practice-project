@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
 import { CgDanger } from 'react-icons/cg';
 import { MdFileDownloadDone } from 'react-icons/md';
+
+import api from '../api/axios';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -33,10 +34,8 @@ const ForgotPassword = () => {
 
       const response = await api.post('/user/resetPassSendOtp', { email });
 
-      if (response.status === 200) {
-        setIsOtpSent(true);
-        setSuccess('OTP sent to your email');
-      }
+      setIsOtpSent(true);
+      setSuccess('OTP sent to your email');
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to send OTP');
     } finally {

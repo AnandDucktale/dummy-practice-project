@@ -1,4 +1,5 @@
 import { IoClose } from 'react-icons/io5';
+
 import defaultAvatar from '../../assets/defaultAvatar1.jpg';
 
 const ViewGroupMemberModal = ({ groupMembers, onClose }) => {

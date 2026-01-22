@@ -1,8 +1,8 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../api/axios';
 import { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+
+import api from '../api/axios';
 
 const InviteRedirect = () => {
   const { token } = useParams();
@@ -23,20 +23,20 @@ const InviteRedirect = () => {
       const response = await api.get('/group/validateInviteToken', {
         params: params,
       });
-      console.log(response);
+      // console.log(response);
       if (response.status === 200) {
         localStorage.setItem('inviteToken', token);
         navigate('/groups');
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       if (error.response.status === 401) {
         toast.error(error?.message || 'Invalid Token', {
           position: 'top-center',
           theme: 'colored',
           autoClose: 3000,
         });
-        setTimeout(() => navigate('/groups'), 10000);
+        setTimeout(() => navigate('/groups'), 1000);
       }
     }
   };

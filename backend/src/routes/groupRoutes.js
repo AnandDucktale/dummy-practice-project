@@ -1,6 +1,8 @@
 import express from 'express';
+
 import verifyJWT from '../middleware/authenticationMiddleware.js';
 import verifyRole from '../middleware/authorizationMiddelware.js';
+
 import {
   addMemberToGroup,
   allGroups,
@@ -35,7 +37,6 @@ router.post(
 router.get('/showAllGroupsToAdmin', verifyJWT, verifyRole, allGroups);
 router.get('/allUsersInGroup', verifyJWT, verifyRole, allUsersInGroup);
 router.post('/generateInviteToken', verifyJWT, verifyRole, generateInviteToken);
-
 router.get('/groups', verifyJWT, groups);
 router.post('/fetchGroupByInviteToken', verifyJWT, fetchGroupByInviteToken);
 router.post('/sendDocument', verifyJWT, sendDocument);
@@ -43,7 +44,6 @@ router.get('/groupDetail', verifyJWT, groupDetail);
 router.get('/groupData', verifyJWT, groupData);
 router.get('/groupMembers', verifyJWT, groupMembers);
 router.get('/validateInviteToken', validateInviteToken);
-
 router.post('/leaveGroup', verifyJWT, leaveGroup);
 router.post('/deleteDocuments', verifyJWT, deleteDocuments);
 router.post('/deleteGroup', verifyJWT, verifyRole, deleteGroup);

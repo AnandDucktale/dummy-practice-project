@@ -3,6 +3,7 @@ import {
   createRoutesFromElements,
   Route,
 } from 'react-router-dom';
+
 import Layout from '../layout/Layout.jsx';
 import Signup from '../pages/Signup.jsx';
 import VerifyEmail from '../pages/VerifyEmail.jsx';
@@ -50,8 +51,8 @@ const router = createBrowserRouter(
           <Route path="show-users-to-admin" element={<ShowUsersToAdmin />} />
         </Route>
       </Route>
-    </Route>
-  )
+    </Route>,
+  ),
 );
 
 export default router;

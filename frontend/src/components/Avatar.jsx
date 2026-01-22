@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { TiPencil } from 'react-icons/ti';
+
 import defaultAvatar from '../assets/defaultAvatar1.jpg';
 import api from '../api/axios';
 import useAuthStore from '../hooks/store/useAuthStore';
-import { TiPencil } from 'react-icons/ti';
 
 const Avatar = () => {
   const { user, updateUser } = useAuthStore();
@@ -22,15 +23,13 @@ const Avatar = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      console.log(response.data);
-
       setProfilePic(response.data.avatar);
 
       updateUser({
         avatar: response.data.avatar,
       });
     } catch (error) {
-      console.error('On avatar uploading', error);
+      // console.error('On avatar uploading', error);
     }
   };
   return (

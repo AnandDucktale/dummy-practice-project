@@ -1,17 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import useAuthStore from '../hooks/store/useAuthStore';
-import { IoAddSharp, IoClose } from 'react-icons/io5';
-import api from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import NewGroupModal from '../components/modals/NewGroupModal';
-import defaultGroupIcon from '../assets/group-icon.jpg';
+import { IoClose } from 'react-icons/io5';
 import { HiDotsVertical } from 'react-icons/hi';
+
+import defaultGroupIcon from '../assets/group-icon.jpg';
+import NewGroupModal from '../components/modals/NewGroupModal';
+import api from '../api/axios';
+import useAuthStore from '../hooks/store/useAuthStore';
 
 const Groups = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+
   const [groupList, setGroupList] = useState([]);
   const [inviteToken, setInviteToken] = useState(null);
   const groupPageRef = useRef();
@@ -45,18 +47,18 @@ const Groups = () => {
 
   const handleGroupDelete = async () => {
     try {
-      console.log(groupID);
+      // console.log(groupID);
       const response = await api.post('/group/deleteGroup', {
         groupId: groupID,
       });
-      console.log(response);
+      // console.log(response);
       toast.success(response.data.message || 'Group deleted', {
         position: 'top-center',
         autoClose: 3000,
         theme: 'colored',
       });
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       toast.error(
         error?.response?.data.message ||
           error?.message ||
@@ -101,7 +103,7 @@ const Groups = () => {
         },
       );
 
-      console.log(response.data.groupName);
+      // console.log(response.data.groupName);
 
       toast.success(`User added to '${response.data.groupName}'`, {
         position: 'top-center',
@@ -109,9 +111,9 @@ const Groups = () => {
       });
       localStorage.removeItem('inviteToken');
     } catch (error) {
-      console.log('Error while fetching details through invite token', error);
+      // console.log('Error while fetching details through invite token', error);
 
-      console.log(error?.response.data.groupName);
+      // console.log(error?.response.data.groupName);
 
       if (error?.response.status === 409) {
         toast.error(
@@ -166,7 +168,7 @@ const Groups = () => {
         },
       );
       setError('Server error while loading groups');
-      console.log("Error while fetching user's group", error);
+      // console.log("Error while fetching user's group", error);
     } finally {
       setIsLoading(false);
     }
@@ -218,7 +220,7 @@ const Groups = () => {
         },
       );
       setError('Server error while loading more groups');
-      console.log('Error loading more groups', error);
+      // console.log('Error loading more groups', error);
     } finally {
       setIsLoading(false);
     }
@@ -228,24 +230,24 @@ const Groups = () => {
     try {
       const formData = new FormData();
       if (newGroupIcon) {
-        console.log(newGroupIcon);
+        // console.log(newGroupIcon);
         formData.append('newGroupIcon', newGroupIcon);
       }
       formData.append('newGroupName', newGroupName);
       formData.append('newGroupDescription', newGroupDescription);
 
-      console.log(newGroupName);
-      console.log(newGroupDescription);
+      // console.log(newGroupName);
+      // console.log(newGroupDescription);
 
       const response = await api.post('/group/createGroup', formData);
-      console.log(response);
+      // console.log(response);
       setNewGroupIcon('');
       setNewGroupName('');
       setNewGroupDescription('');
       setNewGroupModalOpen(false);
       await fetchUserGroups();
     } catch (error) {
-      console.log(error);
+      // console.log(error);
 
       toast.error(
         error?.message ||

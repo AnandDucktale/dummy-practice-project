@@ -1,3 +1,6 @@
+import logger from '../logger.js';
+import ApiError from '../utils/ApiError.js';
+
 import {
   authGoogleService,
   loginService,
@@ -10,7 +13,6 @@ import {
   refreshAccessTokenService,
   avatarService,
 } from '../services/userServices.js';
-import ApiError from '../utils/ApiError.js';
 import {
   authGoogleSchema,
   loginSchema,
@@ -47,6 +49,7 @@ export const signup = async (req, res) => {
     }
 
     const user = await signupService(firstName, lastName, email, password);
+    logger.info(user, 'Verify the email in next step');
 
     return res.status(201).json({
       success: true,
@@ -54,6 +57,8 @@ export const signup = async (req, res) => {
       message: 'Verify the email in next step',
     });
   } catch (error) {
+    logger.error(error, 'Signup error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -61,8 +66,8 @@ export const signup = async (req, res) => {
       });
     }
 
-    console.error('Signup error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -80,6 +85,7 @@ export const verifyUserEmail = async (req, res) => {
     }
 
     const response = await verifyEmailService(req.body.email, req.body.userOtp);
+    logger.info(response, '');
 
     return res.status(200).json({
       success: true,
@@ -89,6 +95,8 @@ export const verifyUserEmail = async (req, res) => {
       refreshToken: response.refreshToken,
     });
   } catch (error) {
+    logger.error(error, 'Verify email error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -96,8 +104,8 @@ export const verifyUserEmail = async (req, res) => {
       });
     }
 
-    console.error('Verify email error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -113,7 +121,7 @@ export const login = async (req, res) => {
   // send response
 
   try {
-    console.log('login');
+    // console.log('login');
 
     const { error } = loginSchema.validate({
       email: req.body.email,
@@ -125,6 +133,7 @@ export const login = async (req, res) => {
     }
 
     const response = await loginService(req.body.email, req.body.password);
+    logger.info(response, '');
 
     return res.status(200).json({
       success: true,
@@ -134,6 +143,8 @@ export const login = async (req, res) => {
       refreshToken: response.refreshToken,
     });
   } catch (error) {
+    logger.error(error, 'Login error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -141,8 +152,8 @@ export const login = async (req, res) => {
       });
     }
 
-    console.error('Login error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -160,6 +171,7 @@ export const authGoogle = async (req, res) => {
     }
 
     const response = await authGoogleService(req.body.googleToken);
+    logger.info(response, '');
 
     return res.status(200).json({
       success: true,
@@ -169,6 +181,8 @@ export const authGoogle = async (req, res) => {
       refreshToken: response.refreshToken,
     });
   } catch (error) {
+    logger.error(error, 'AuthGoogle error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -176,8 +190,8 @@ export const authGoogle = async (req, res) => {
       });
     }
 
-    console.error('AuthGoogle error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -187,6 +201,7 @@ export const logout = async (req, res) => {
   try {
     // console.log(req.user?._id);
     const response = await logoutService(req.user?._id);
+    logger.info(response, '');
 
     return res.status(200).json({
       success: true,
@@ -194,6 +209,8 @@ export const logout = async (req, res) => {
       refreshToken: response.refreshToken,
     });
   } catch (error) {
+    logger.error(error, 'Logout error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -201,8 +218,8 @@ export const logout = async (req, res) => {
       });
     }
 
-    console.error('Logout error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -219,12 +236,15 @@ export const resetPassSendOTP = async (req, res) => {
     }
 
     const response = await resetPassSendOTPService(req.body.email);
+    logger.info(response, '');
 
     return res.status(200).json({
       success: true,
       message: 'OTP is sent to your email for reset the password.',
     });
   } catch (error) {
+    logger.error(error, 'Reset password send otp error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -232,8 +252,8 @@ export const resetPassSendOTP = async (req, res) => {
       });
     }
 
-    console.error('Reset password send otp error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -254,6 +274,7 @@ export const resetPassVerifyOTP = async (req, res) => {
       req.body.email,
       req.body.userOtp,
     );
+    logger.info(response, '');
 
     return res.status(200).json({
       success: true,
@@ -261,6 +282,8 @@ export const resetPassVerifyOTP = async (req, res) => {
       resetToken: response.resetToken,
     });
   } catch (error) {
+    logger.error(error, 'Reset password otp verify error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -268,8 +291,8 @@ export const resetPassVerifyOTP = async (req, res) => {
       });
     }
 
-    console.error('Reset password otp verify error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -290,12 +313,15 @@ export const resetPassword = async (req, res) => {
       req.body.userResetToken,
       req.body.newPassword,
     );
+    logger.info(response, '');
 
     return res.status(200).json({
       success: true,
       message: 'Password successfully changed',
     });
   } catch (error) {
+    logger.error(error, 'Reset password error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -303,8 +329,8 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    console.error('Reset password error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -315,6 +341,7 @@ export const refreshAccessToken = async (req, res) => {
     // console.log(req.body);
 
     const response = await refreshAccessTokenService(req.body.refreshToken);
+    logger.info(response, '');
 
     return res.status(200).json({
       success: true,
@@ -323,6 +350,8 @@ export const refreshAccessToken = async (req, res) => {
       message: 'Access token refreshed',
     });
   } catch (error) {
+    logger.error(error, 'Refresh access token error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -330,8 +359,8 @@ export const refreshAccessToken = async (req, res) => {
       });
     }
 
-    console.error('Refresh access token error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -340,12 +369,16 @@ export const refreshAccessToken = async (req, res) => {
 export const avatar = async (req, res) => {
   try {
     const response = await avatarService(req.files?.avatar, req.user?._id);
+    logger.info(response, '');
+
     return res.status(200).json({
       success: true,
       avatar: response.avatarUrl,
       message: 'File uploaded',
     });
   } catch (error) {
+    logger.error(error, 'Upload avatar error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -353,8 +386,8 @@ export const avatar = async (req, res) => {
       });
     }
 
-    console.error('Upload avatar error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }

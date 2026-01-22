@@ -1,4 +1,5 @@
 import Joi from 'joi';
+
 import { email, objectId, pagination } from './common.validation.js';
 
 export const contactsSchema = Joi.object({
