@@ -2,10 +2,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
+import { ToastContainer, toast } from 'react-toastify';
+
+import 'react-toastify/dist/ReactToastify.css';
 import api from '../api/axios';
 import useAuthStore from '../hooks/store/useAuthStore';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import GoogleAuthButton from '../components/GoogleAuthButton';
 
 const userLoginSchema = Yup.object({
@@ -32,12 +33,10 @@ const Login = () => {
 
   const onSubmit = async (values) => {
     try {
-      console.log('login start');
-
       const response = await api.post('/user/login', values, {
         headers: { 'Content-Type': 'application/json' },
       });
-      console.log(response);
+      // console.log(response);
 
       toast.success('Login Successfully', {
         position: 'top-center',
@@ -46,7 +45,7 @@ const Login = () => {
 
       // Zustand auth store
       setAuth(response.data.user, response.data.accessToken);
-
+      // console.log(response.data.user);
       // Store refresh token
       localStorage.setItem('refreshToken', response.data.refreshToken);
 

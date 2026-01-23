@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { TiPencil } from 'react-icons/ti';
+import { toast, ToastContainer } from 'react-toastify';
+
 import defaultAvatar from '../assets/defaultAvatar1.jpg';
 import api from '../api/axios';
 import useAuthStore from '../hooks/store/useAuthStore';
-import { TiPencil } from 'react-icons/ti';
 
 const Avatar = () => {
   const { user, updateUser } = useAuthStore();
@@ -12,6 +14,12 @@ const Avatar = () => {
     const file = event.target.files[0];
 
     if (!file) return;
+    console.log(file);
+
+    if (file.size > 1048576 * 2) {
+      toast.warn('Avatar size should be less than 2MB');
+      return;
+    }
 
     const formData = new FormData();
 
@@ -22,19 +30,33 @@ const Avatar = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      console.log(response.data);
-
       setProfilePic(response.data.avatar);
 
       updateUser({
         avatar: response.data.avatar,
       });
+      toast.success(response?.data.message || 'Avatar uploaded', {
+        position: 'top-center',
+        theme: 'colored',
+        autoClose: 3000,
+      });
     } catch (error) {
-      console.error('On avatar uploading', error);
+      // console.error('On avatar uploading', error);
+      toast.error(
+        error?.response?.data.message ||
+          error?.message ||
+          'Internal Server Error',
+        {
+          position: 'top-center',
+          theme: 'colored',
+          autoClose: 3000,
+        },
+      );
     }
   };
   return (
     <div className="flex flex-col items-center justify-center">
+      <ToastContainer position="top-center" autoClose={3000} theme="colored" />
       <label
         htmlFor="avatarFile"
         className="group relative w-60 h-60 rounded-full overflow-hidden cursor-pointer hover:shadow-neutral-600 shadow-2xl transition-shadow"
@@ -61,7 +83,7 @@ const Avatar = () => {
         id="avatarFile"
         className="hidden"
         onChange={handlePicSubmission}
-        accept="image/*"
+        accept="image/*, image/heic, image/heif, image/heic-sequence, image/heif-sequence, .heic, .heif, .heifs, .heics, .hif"
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { create } from 'zustand';
+
 import api from '../../api/axios';
 
 const useAuthStore = create((set, get) => ({
@@ -18,11 +19,11 @@ const useAuthStore = create((set, get) => ({
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       const response = await axios.post(
-        'http://localhost:9999/user/refreshToken',
+        `${import.meta.env.VITE_API_URL}/user/refreshToken`,
         { refreshToken },
         {
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
 
       set({
@@ -30,7 +31,7 @@ const useAuthStore = create((set, get) => ({
       });
       return response.data.accessToken;
     } catch (error) {
-      console.error('Refresh failed', error.response?.data || error.message);
+      // console.error('Refresh failed', error.response?.data || error.message);
       get().clearAuth();
       return null;
     }
@@ -45,7 +46,7 @@ const useAuthStore = create((set, get) => ({
         { refreshToken },
         {
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
 
       set({

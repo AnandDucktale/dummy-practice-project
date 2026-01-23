@@ -1,5 +1,7 @@
 import express from 'express';
-const router = express.Router();
+
+import verifyJWT from '../middleware/authenticationMiddleware.js';
+
 import {
   signup,
   login,
@@ -14,7 +16,7 @@ import {
   avatar,
 } from '../controller/userController.js';
 
-import verifyJWT from '../middleware/authenticationMiddleware.js';
+const router = express.Router();
 
 router.post('/signup', signup);
 router.post('/verifyEmail', verifyUserEmail);
@@ -23,7 +25,6 @@ router.post('/auth/google', authGoogle);
 router.post('/logout', verifyJWT, logout);
 router.get('/home', verifyJWT, home);
 router.post('/avatar', verifyJWT, avatar);
-
 router.post('/refreshToken', refreshAccessToken);
 router.post('/resetPassSendOtp', resetPassSendOTP);
 router.post('/resetPassVerifyOtp', resetPassVerifyOTP);

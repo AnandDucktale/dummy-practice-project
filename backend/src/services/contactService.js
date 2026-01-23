@@ -1,9 +1,9 @@
-import Contact from '../models/Contact.js';
 import ApiError from '../utils/ApiError.js';
+
+import Contact from '../models/Contact.js';
 
 export const contactsService = async (page, limit, field, contactOwnerId) => {
   const skip = (page - 1) * limit;
-  // console.log(contactOwnerId);
 
   let contacts;
 
@@ -34,17 +34,12 @@ export const contactsService = async (page, limit, field, contactOwnerId) => {
       .limit(limit);
   }
 
-  //   console.log(contacts);
-
   const total = await Contact.countDocuments({
     contactOwnerId: contactOwnerId,
   });
   const totalPages = Math.ceil(total / limit);
 
   return {
-    success: true,
-    status: 200,
-    message: `Your ${limit} contacts for page number ${page}.`,
     page,
     limit,
     total,
@@ -58,14 +53,9 @@ export const searchContactsService = async (
   limit,
   field,
   search,
-  contactOwnerId
+  contactOwnerId,
 ) => {
   const skip = (page - 1) * limit;
-  // console.log(page, limit, search, field, contactOwnerId, skip);
-
-  if (!search.trim() === '') {
-    throw new ApiError(400, 'Nothing to search');
-  }
 
   const query = {
     contactOwnerId: contactOwnerId,
@@ -101,22 +91,9 @@ export const searchContactsService = async (
     contacts = await Contact.find(query).skip(skip).limit(limit);
   }
 
-  // console.log(contacts);
-
   const total = await Contact.countDocuments(query);
 
-  // if (total === 0) {
-  //   return {
-  //     success: true,
-  //     status: 200,
-  //     contacts,
-  //     totalContacts: 0,
-  //     totalPages: 0,
-  //   };
-  // }
   return {
-    success: true,
-    status: 200,
     contacts,
     totalPages: Math.ceil(total / limit),
     total: total,
@@ -124,31 +101,18 @@ export const searchContactsService = async (
 };
 
 export const contactDetailService = async (contactId) => {
-  // console.log(contactId);
-
   const contact = await Contact.findById(contactId);
 
   if (!contact) {
     throw new ApiError(404, 'This contact does not exist');
   }
 
-  // console.log(contact);
-
   return {
-    success: true,
-    status: 200,
     contact: contact,
-    message: 'Contact Details',
   };
 };
 
 export const editContactService = async (name, email, phone, contactId) => {
-  // console.log('edit contact');
-
-  // console.log(name);
-  // console.log(email);
-  // console.log(phone);
-
   const contact = await Contact.findById(contactId);
 
   if (!contact) {
@@ -162,9 +126,6 @@ export const editContactService = async (name, email, phone, contactId) => {
   await contact.save();
 
   return {
-    success: true,
-    status: 200,
-    message: 'Contact updated',
     contact: contact,
   };
 };
@@ -174,11 +135,8 @@ export const addContactService = async (
   email,
   phone,
   age,
-  contactOwnerId
+  contactOwnerId,
 ) => {
-  // console.log(name, email, phone, age);
-  // console.log(contactOwnerId);
-
   const contactCreated = await Contact.create({
     name: name,
     email: email,
@@ -187,11 +145,7 @@ export const addContactService = async (
     contactOwnerId: contactOwnerId,
   });
 
-  // const contactCreated = 'hello';
   return {
-    success: true,
-    status: 200,
-    message: 'Contact Created',
     contactCreated,
   };
 };

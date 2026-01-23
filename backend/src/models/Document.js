@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 const { Schema, model } = mongoose;
 
 const documentSchema = new Schema(
@@ -28,7 +29,7 @@ const documentSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const Document = model('Document', documentSchema);

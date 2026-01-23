@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as Yup from 'yup';
-import api from '../api/axios';
-import useAuthStore from '../hooks/store/useAuthStore';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as Yup from 'yup';
+
+import api from '../api/axios';
+import useAuthStore from '../hooks/store/useAuthStore';
 
 // Yup validation schema
 const verifyEmailSchema = Yup.object({
@@ -17,6 +18,7 @@ const verifyEmailSchema = Yup.object({
 
 const VerifyEmail = () => {
   const [email, setEmail] = useState('');
+
   const { setAuth } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -46,7 +48,7 @@ const VerifyEmail = () => {
       const response = await api.post(
         '/user/verifyEmail',
         { email, userOtp: values.otp },
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { 'Content-Type': 'application/json' } },
       );
 
       toast.success('Email verified successfully', {

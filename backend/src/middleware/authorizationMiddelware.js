@@ -2,7 +2,8 @@ const verifyRole = async (req, res, next) => {
   try {
     const admin = req.user;
     if (!(admin.role === 'admin')) {
-      res.status(403).json({
+      return res.status(403).json({
+        success: false,
         message: 'You are not authorized person for this end-point',
       });
     }

@@ -1,3 +1,23 @@
+import logger from '../logger.js';
+import ApiError from '../utils/ApiError.js';
+
+import {
+  addMemberToGroupSchema,
+  allUsersInGroupSchema,
+  deleteDocumentsSchema,
+  deleteGroupSchema,
+  fetchGroupByInviteTokenSchema,
+  generateInviteTokenSchema,
+  groupDataSchema,
+  groupDetailSchema,
+  groupMembersSchema,
+  groupsSchema,
+  leaveGroupSchema,
+  makeGroupSchema,
+  removeMemberFromGroupSchema,
+  sendDocumentSchema,
+  validateInviteTokenSchema,
+} from '../validations/group.validation.js';
 import {
   makeGroupService,
   allGroupsService,
@@ -18,24 +38,6 @@ import {
   deleteDocumentsService,
   deleteGroupService,
 } from '../services/groupService.js';
-import ApiError from '../utils/ApiError.js';
-import {
-  addMemberToGroupSchema,
-  allUsersInGroupSchema,
-  deleteDocumentsSchema,
-  deleteGroupSchema,
-  fetchGroupByInviteTokenSchema,
-  generateInviteTokenSchema,
-  groupDataSchema,
-  groupDetailSchema,
-  groupMembersSchema,
-  groupsSchema,
-  leaveGroupSchema,
-  makeGroupSchema,
-  removeMemberFromGroupSchema,
-  sendDocumentSchema,
-  validateInviteTokenSchema,
-} from '../validations/group.validation.js';
 
 export const makeGroup = async (req, res) => {
   try {
@@ -43,17 +45,20 @@ export const makeGroup = async (req, res) => {
       groupName: req.body.groupName,
       userIds: req.body.userIds,
     });
-
     if (error) {
       throw new ApiError(400, error.details[0].message);
     }
+
     const response = await makeGroupService(
       req.body.groupName,
       req.body.userIds,
     );
+    logger.info(response, 'Make group');
 
-    return res.status(200).json({ message: response.message });
+    return res.status(200).json({ success: true, message: 'Make group' });
   } catch (error) {
+    logger.error(error, 'Error while making group');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -61,8 +66,8 @@ export const makeGroup = async (req, res) => {
       });
     }
 
-    console.error('Error while making group:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -70,7 +75,6 @@ export const makeGroup = async (req, res) => {
 
 export const createGroup = async (req, res) => {
   try {
-    // console.log(req.body);
     let response;
 
     if (req?.files) {
@@ -82,11 +86,14 @@ export const createGroup = async (req, res) => {
     } else {
       response = await createGroupWithoutIconService(req.body, req.user);
     }
+    logger.info(response, 'Group created');
 
     return res
       .status(200)
-      .json({ message: 'Group created', group: response.group });
+      .json({ success: true, message: 'Group created', group: response.group });
   } catch (error) {
+    logger.error(error, 'Error while creating group');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -94,8 +101,8 @@ export const createGroup = async (req, res) => {
       });
     }
 
-    console.error('Error while creating group:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -116,9 +123,14 @@ export const addMemberToGroup = async (req, res) => {
       req.body.groupId,
       req.body.selectedUserIds,
     );
+    logger.info(response, 'Members added to group');
 
-    return res.status(200).json({ message: response.message });
+    return res
+      .status(200)
+      .json({ success: true, message: 'Members added to group' });
   } catch (error) {
+    logger.error(error, 'Error while adding member to group');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -126,8 +138,8 @@ export const addMemberToGroup = async (req, res) => {
       });
     }
 
-    console.error('Error while adding member to group:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -148,11 +160,15 @@ export const removeMemberFromGroup = async (req, res) => {
       req.body.groupId,
       req.body.selectedUserIds,
     );
+    logger.info(response, 'Member removed from group');
 
     return res.status(200).json({
-      message: 'User deleted',
+      success: true,
+      message: 'Member removed from group',
     });
   } catch (error) {
+    logger.error(error, 'Error while remove member from the group');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -160,8 +176,8 @@ export const removeMemberFromGroup = async (req, res) => {
       });
     }
 
-    console.error('Error while remove member from the group:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -170,12 +186,16 @@ export const removeMemberFromGroup = async (req, res) => {
 export const allGroups = async (req, res) => {
   try {
     const response = await allGroupsService(req.user);
+    logger.info(response, 'All groups');
 
     return res.status(200).json({
-      message: response.message,
+      success: true,
+      message: 'All groups',
       groups: response.groups,
     });
   } catch (error) {
+    logger.error(error, 'Error while getting all groups');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -183,8 +203,8 @@ export const allGroups = async (req, res) => {
       });
     }
 
-    console.error('Error while getting all groups:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -200,12 +220,16 @@ export const allUsersInGroup = async (req, res) => {
       throw new ApiError(400, error.details[0].message);
     }
     const response = await allUsersInGroupService(req.query.groupId);
+    logger.info(response, 'Users in group');
 
     return res.status(200).json({
-      message: response.message,
+      success: true,
+      message: 'Users in group',
       users: response.users,
     });
   } catch (error) {
+    logger.error(error, 'Error while fetching all users of group');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -213,8 +237,8 @@ export const allUsersInGroup = async (req, res) => {
       });
     }
 
-    console.error('Error while fetching all users of group:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -230,12 +254,16 @@ export const generateInviteToken = async (req, res) => {
       throw new ApiError(400, error.details[0].message);
     }
     const response = await generateInviteTokenService(req.body.groupId);
+    logger.info(response, 'Invite token generated by admin');
 
     return res.status(200).json({
-      message: response.message,
+      success: true,
+      message: 'Invite token generated by admin',
       inviteLink: response.inviteLink,
     });
   } catch (error) {
+    logger.error(error, 'Error while generating invite token');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -243,8 +271,8 @@ export const generateInviteToken = async (req, res) => {
       });
     }
 
-    console.error('Error while generating invite token:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -265,14 +293,17 @@ export const groups = async (req, res) => {
     //   throw new ApiError(400, error.details[0].message);
     // }
     const response = await groupsService(req.user, req.query);
+    logger.info(response, 'All groups of user');
     // console.log(req.params);
 
     return res.status(200).json({
       success: true,
-      message: 'All Groups',
+      message: 'All groups of user',
       groups: response.groups,
     });
   } catch (error) {
+    logger.error(error, 'My Groups error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -280,8 +311,8 @@ export const groups = async (req, res) => {
       });
     }
 
-    console.error('My Groups error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -304,12 +335,16 @@ export const sendDocument = async (req, res) => {
       req.body?.groupId,
       req.files?.documents,
     );
+    logger.info(response, 'Document sent');
+
     return res.status(200).json({
       success: true,
-      message: 'Document sent',
+      message: 'Document uploaded',
       documents: response.documents,
     });
   } catch (error) {
+    logger.error(error, 'Send document error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -317,8 +352,8 @@ export const sendDocument = async (req, res) => {
       });
     }
 
-    console.error('Send document error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -334,6 +369,7 @@ export const groupDetail = async (req, res) => {
       throw new ApiError(400, error.details[0].message);
     }
     const response = await groupDetailService(req.query.groupId);
+    logger.info(response, 'Group Detail');
 
     return res.status(200).json({
       success: true,
@@ -341,6 +377,8 @@ export const groupDetail = async (req, res) => {
       groupDetail: response.groupDetail,
     });
   } catch (error) {
+    logger.error(error, 'Group name error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -348,8 +386,8 @@ export const groupDetail = async (req, res) => {
       });
     }
 
-    console.error('Group name error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -367,16 +405,19 @@ export const groupData = async (req, res) => {
       throw new ApiError(400, error.details[0].message);
     }
     const response = await groupDataService(req.query);
+    logger.info(response, 'Group Data');
 
     return res.status(200).json({
       success: true,
-      message: 'Group Detail',
+      message: 'Group Data',
       groupDetail: response.groupDetail,
       page: response.page,
       docsLimit: response.docsLimit,
       totalPages: response.totalPages,
     });
   } catch (error) {
+    logger.error(error, 'Error while fetching group data');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -384,8 +425,8 @@ export const groupData = async (req, res) => {
       });
     }
 
-    console.error('Group detail error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -401,14 +442,17 @@ export const groupMembers = async (req, res) => {
       throw new ApiError(400, error.details[0].message);
     }
     const response = await groupMembersService(req.query.groupId);
+    logger.info(response, 'All Group member list');
 
     return res.status(200).json({
       success: true,
       status: 200,
-      message: 'All Group members list',
+      message: 'All Group member list',
       groupMembers: response.groupMembers,
     });
   } catch (error) {
+    logger.error(error, 'Error while fetching group members');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -416,8 +460,8 @@ export const groupMembers = async (req, res) => {
       });
     }
 
-    console.error('Group member error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -433,12 +477,15 @@ export const validateInviteToken = async (req, res) => {
       throw new ApiError(400, error.details[0].message);
     }
     const response = await validateInviteTokenService(req.query.token);
+    logger.info(response, 'Valid invite token');
 
     return res.status(200).json({
       success: true,
-      message: 'Valid invite token.',
+      message: 'Valid invite token',
     });
   } catch (error) {
+    logger.error(error, 'Validate invite token error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -446,8 +493,8 @@ export const validateInviteToken = async (req, res) => {
       });
     }
 
-    console.error('Validate invite token error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -459,14 +506,15 @@ export const fetchGroupByInviteToken = async (req, res) => {
       userId: req.user._id.toString(),
       token: req.body.token,
     });
-
     if (error) {
       throw new ApiError(400, error.details[0].message);
     }
+
     const response = await fetchGroupByInviteTokenService(
       req.user._id,
       req.body.token,
     );
+    logger.info(response, 'Joined through invite link');
 
     // console.log(response);
 
@@ -476,6 +524,8 @@ export const fetchGroupByInviteToken = async (req, res) => {
       groupName: response.groupName,
     });
   } catch (error) {
+    logger.error(error, 'Fetch group by invite token error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -483,8 +533,8 @@ export const fetchGroupByInviteToken = async (req, res) => {
       });
     }
 
-    console.error('Fetch group by invite token error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -505,6 +555,7 @@ export const leaveGroup = async (req, res) => {
       req.body.userId,
       req.body.groupId,
     );
+    logger.info(response, 'User Left the Group');
 
     return res.status(200).json({
       success: true,
@@ -512,6 +563,8 @@ export const leaveGroup = async (req, res) => {
       message: 'User Left the Group',
     });
   } catch (error) {
+    logger.error(error, 'Leave group error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -519,8 +572,8 @@ export const leaveGroup = async (req, res) => {
       });
     }
 
-    console.error('Leave group error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -539,12 +592,15 @@ export const deleteDocuments = async (req, res) => {
       req.body.selectedDocsIds,
       req.user,
     );
+    logger.info(response, 'Documents deleted');
 
     return res.status(200).json({
       success: true,
       message: 'Documents deleted',
     });
   } catch (error) {
+    logger.error(error, 'Document deleted error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -552,12 +608,13 @@ export const deleteDocuments = async (req, res) => {
       });
     }
 
-    console.error('Document deleted error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
 };
+
 export const deleteGroup = async (req, res) => {
   try {
     const { error } = deleteGroupSchema.validate({
@@ -568,12 +625,15 @@ export const deleteGroup = async (req, res) => {
       throw new ApiError(400, error.details[0].message);
     }
     const response = await deleteGroupService(req.body);
+    logger.info(response, 'Group deleted');
 
     return res.status(200).json({
       success: true,
       message: 'Group deleted',
     });
   } catch (error) {
+    logger.error(error, 'Group deleted error');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -581,8 +641,8 @@ export const deleteGroup = async (req, res) => {
       });
     }
 
-    console.error('Group deleted error:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }

@@ -1,4 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom';
+
 import useAuthStore from '../hooks/store/useAuthStore';
 
 const PublicRoutes = () => {

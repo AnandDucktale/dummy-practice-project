@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import defaultAvatar from '../../assets/defaultAvatar1.jpg';
 import { HiUserRemove } from 'react-icons/hi';
 import { IoClose } from 'react-icons/io5';
+
+import defaultAvatar from '../../assets/defaultAvatar1.jpg';
 
 const RemoveGroupMemberModal = ({ groupMembers, onClose, onRemoveMembers }) => {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
@@ -10,7 +11,7 @@ const RemoveGroupMemberModal = ({ groupMembers, onClose, onRemoveMembers }) => {
     setSelectedUserIds((prev) =>
       selectedUserIds.includes(userId)
         ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
+        : [...prev, userId],
     );
   };
 

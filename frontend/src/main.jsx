@@ -1,8 +1,9 @@
 import { createRoot } from 'react-dom/client';
-import './index.css';
 import { RouterProvider } from 'react-router-dom';
-import router from './router/routes.jsx';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+
+import './index.css';
+import router from './router/routes.jsx';
 
 const google_client_id = import.meta.env.GOOGLE_CLIENT_ID;
 

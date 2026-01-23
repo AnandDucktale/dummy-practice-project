@@ -1,15 +1,15 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import { generateOTP } from '../utils/otpManager.js';
-import { sendOTPEmail } from '../utils/mailer.js';
 import path from 'path';
 import fs from 'fs';
+import jwt from 'jsonwebtoken';
+
+import { generateOTP } from '../utils/otpManager.js';
+import { sendOTPEmail } from '../utils/mailer.js';
 import client from '../utils/googleClient.js';
 import ApiError from '../utils/ApiError.js';
 
-export const signupService = async (firstName, lastName, email, password) => {
-  // Check if email already existed or not
+import User from '../models/User.js';
 
+export const signupService = async (firstName, lastName, email, password) => {
   const existedUser = await User.findOne({ email });
   if (existedUser) {
     throw new ApiError(409, 'User already exist.');
@@ -38,15 +38,11 @@ export const signupService = async (firstName, lastName, email, password) => {
 };
 
 export const verifyEmailService = async (email, userOtp) => {
-  // Check user exist of that email
-
   const user = await User.findOne({ email });
 
   if (!user) {
     throw new ApiError(404, 'User does not exist.');
   }
-
-  // Check is there otp is present in DB or not
 
   if (!user.otp) {
     throw new ApiError(400, 'No OTP found.');
@@ -69,7 +65,7 @@ export const verifyEmailService = async (email, userOtp) => {
     user.otp = null;
     user.otpCreatedAt = null;
     await user.save();
-    throw new ApiError(400, 'PTP expired.');
+    throw new ApiError(400, 'OTP expired.');
   }
 
   user.otp = null;
@@ -78,9 +74,6 @@ export const verifyEmailService = async (email, userOtp) => {
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
 
-  // console.log(accessToken);
-  // console.log(refreshToken);
-
   user.isVerified = true;
   user.refreshToken = refreshToken;
 
@@ -88,20 +81,17 @@ export const verifyEmailService = async (email, userOtp) => {
 
   // Clean fields
   const cleanUser = await User.findById(user._id).select(
-    '_id email firstName lastName avatar isVerified role'
+    '_id email firstName lastName avatar isVerified role',
   );
 
   return {
     cleanUser,
     accessToken,
     refreshToken,
-    // options,
   };
 };
 
 export const loginService = async (email, password) => {
-  // Check fields if missing or not
-
   // Check user exist of that email or not
   const user = await User.findOne({ email });
   if (!user) {
@@ -123,32 +113,22 @@ export const loginService = async (email, password) => {
   await user.save({ validateBeforeSave: false });
 
   const loggedUser = await User.findById(user._id).select(
-    '_id email firstName lastName avatar isVerified role'
+    '_id email firstName lastName avatar isVerified role',
   );
 
-  // Cookies option
-  // const options = {
-  //   httpOnly: true,
-  //   secure: true,
-  // };
   return {
     loggedUser,
     accessToken,
     refreshToken,
-    // options,
   };
 };
 
 export const authGoogleService = async (googleToken) => {
-  // console.log(googleToken);
-
   // verify the token
   const verifyToken = await client.verifyIdToken({
     idToken: googleToken,
     audience: process.env.GOOGLE_CLIENT_ID,
   });
-
-  // console.log(verifyToken.getPayload());
 
   // get payload
   const payload = verifyToken.getPayload();
@@ -211,9 +191,8 @@ export const logoutService = async (userId) => {
     {
       $set: { refreshToken: null },
     },
-    { new: true }
+    { new: true },
   ).select('refreshToken');
-  // console.log(user);
 
   return {
     refreshToken: user.refreshToken,
@@ -221,19 +200,6 @@ export const logoutService = async (userId) => {
 };
 
 export const resetPassSendOTPService = async (email) => {
-  // Validate Email exists
-  // Generate OTP
-  // Store in node-cache
-  // send otp
-  // generate restTOken and store in node cache
-  // send otp email to user
-
-  // Check Email present or not
-
-  if (!email) {
-    throw new ApiError(400, 'Email is required.');
-  }
-
   // User exist or not
 
   const user = await User.findOne({ email });
@@ -259,7 +225,7 @@ export const resetPassSendOTPService = async (email) => {
     process.env.RESET_PASS_TOKEN_SECRET,
     {
       expiresIn: process.env.RESET_PASS_TOKEN_EXPIRY,
-    }
+    },
   );
 
   user.otp = otp;
@@ -271,12 +237,6 @@ export const resetPassSendOTPService = async (email) => {
 };
 
 export const resetPassVerifyOTPService = async (email, userOtp) => {
-  // Check OTP matches
-  // If valid → allow password reset
-  // Respone Return temporary resetToken
-
-  // Check user exist of that email
-
   const user = await User.findOne({ email });
 
   if (!user) {
@@ -319,13 +279,6 @@ export const resetPassVerifyOTPService = async (email, userOtp) => {
 };
 
 export const resetPasswordService = async (userResetToken, newPassword) => {
-  // validate token
-  // allow passsword change
-  // delete otp and resetTOken from cache
-  // response password is changed
-
-  // Check fields are present or not
-
   if (!userResetToken || !newPassword) {
     throw new ApiError(400, 'Both reset token and password are required.');
   }
@@ -336,7 +289,7 @@ export const resetPasswordService = async (userResetToken, newPassword) => {
   try {
     decodedToken = jwt.verify(
       userResetToken,
-      process.env.RESET_PASS_TOKEN_SECRET
+      process.env.RESET_PASS_TOKEN_SECRET,
     );
     //   console.log(decodedToken);
   } catch (err) {
@@ -347,8 +300,6 @@ export const resetPasswordService = async (userResetToken, newPassword) => {
   if (!user) {
     throw new ApiError(404, 'User does not exist.');
   }
-
-  // Check reset token matches or not (optional)
 
   if (userResetToken !== user.resetPassToken) {
     throw new ApiError(400, 'This password reset link is not valid.');
@@ -372,7 +323,7 @@ export const refreshAccessTokenService = async (incomingRefreshToken) => {
   try {
     decodedToken = jwt.verify(
       incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET
+      process.env.REFRESH_TOKEN_SECRET,
     );
   } catch (error) {
     if (error?.name === 'TokenExpiredError') {
@@ -385,20 +336,12 @@ export const refreshAccessTokenService = async (incomingRefreshToken) => {
   }
 
   const user = await User.findById(decodedToken?._id).select(
-    '-password -refreshToken -otp -otpCreatedAt -resetPassToken'
+    '-password -refreshToken -otp -otpCreatedAt -resetPassToken',
   );
 
   if (!user) {
     throw new ApiError(401, 'Invalid Refresh Token.');
   }
-
-  // if (incomingRefreshToken !== user?.refreshToken) {
-  //   return {
-  //     status: 401,
-  //     success: false,
-  //     message: 'Refresh token is expired or used',
-  //   };
-  // }
 
   const accessToken = user.generateAccessToken();
 
@@ -410,10 +353,12 @@ export const refreshAccessTokenService = async (incomingRefreshToken) => {
 };
 
 export const avatarService = async (avatarFile, userId) => {
-  // console.log('file', avatarFile);
-
   if (!avatarFile) {
     throw new ApiError(400, 'No file uploaded.');
+  }
+
+  if (avatarFile.size > 1048576 * 2) {
+    throw new ApiError(400, 'Avatar size should be less than 2MB');
   }
 
   const user = await User.findById(userId);
@@ -422,8 +367,6 @@ export const avatarService = async (avatarFile, userId) => {
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
-
-  // console.log('dir: ', uploadDir);
 
   const fileExt = path.extname(avatarFile.name);
   const fileName = `avatar-${Date.now()}${fileExt}`;

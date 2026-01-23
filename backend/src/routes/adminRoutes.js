@@ -1,12 +1,15 @@
 import express from 'express';
+
+import verifyJWT from '../middleware/authenticationMiddleware.js';
+import verifyRole from '../middleware/authorizationMiddelware.js';
+
 import {
   getAllUsers,
   deleteUser,
   userDetail,
   searchUser,
 } from '../controller/adminController.js';
-import verifyJWT from '../middleware/authenticationMiddleware.js';
-import verifyRole from '../middleware/authorizationMiddelware.js';
+
 const router = express.Router();
 
 router.get('/getAllUsers', verifyJWT, verifyRole, getAllUsers);

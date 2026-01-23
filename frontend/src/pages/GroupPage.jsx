@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import api from '../api/axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
 import { FaCheck, FaShare } from 'react-icons/fa';
 import { AiOutlineMenuUnfold } from 'react-icons/ai';
 import { AiOutlineMenuFold } from 'react-icons/ai';
@@ -10,32 +10,50 @@ import {
   MdKeyboardDoubleArrowLeft,
   MdKeyboardDoubleArrowRight,
 } from 'react-icons/md';
-import pdfPNG from '../assets/pdf.png';
-import useAuthStore from '../hooks/store/useAuthStore';
-import AddGroupMemberModal from '../components/modals/AddGroupMemberModal';
-import ViewGroupMemberModal from '../components/modals/ViewGroupMemberModal';
-import GroupMenu from '../components/GroupMenu';
-import RemoveGroupMemberModal from '../components/modals/RemoveGroupMemberModal';
-import { toast, ToastContainer } from 'react-toastify';
-import defaultGroupIcon from '../assets/group-icon.jpg';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { ImCross } from 'react-icons/im';
 import { TiCancel } from 'react-icons/ti';
 
+import api from '../api/axios';
+import pdfPNG from '../assets/pdf.png';
+import cssPNG from '../assets/css.png';
+import spreadSheetPNG from '../assets/spreadsheet.png';
+import jsonPNG from '../assets/json.png';
+import jsPNG from '../assets/javascript.png';
+import htmlPNG from '../assets/html.png';
+import videoPNG from '../assets/video.png';
+import audioPNG from '../assets/audio.png';
+import markdownPNG from '../assets/markdown.png';
+import docxPNG from '../assets/document.png';
+import txtPNG from '../assets/txt.png';
+import useAuthStore from '../hooks/store/useAuthStore.jsx';
+import AddGroupMemberModal from '../components/modals/AddGroupMemberModal';
+import ViewGroupMemberModal from '../components/modals/ViewGroupMemberModal';
+import GroupMenu from '../components/GroupMenu';
+import RemoveGroupMemberModal from '../components/modals/RemoveGroupMemberModal';
+import defaultGroupIcon from '../assets/group-icon.jpg';
+
 const GroupPage = () => {
-  const { groupId } = useParams();
-  const { user } = useAuthStore();
-  const navigate = useNavigate();
   const menuRef = useRef(null);
+
+  const { groupId } = useParams();
+
+  const navigate = useNavigate();
+
+  const { user } = useAuthStore();
+
+  // Page State
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   // Document Limit
   const docsLimit = 12;
 
+  // Groups state
   const [groupName, setGroupName] = useState('');
   const [groupIcon, setGroupIcon] = useState('');
   const [groupDetails, setGroupDetails] = useState([]);
@@ -45,16 +63,14 @@ const GroupPage = () => {
   const [inviteLink, setInviteLink] = useState('');
   const [copied, setCopied] = useState(false);
 
-  //Menu
-  const [isMenuOpen, setMenuOpen] = useState(false);
-
   // Modal
   const [viewGroupMemberModal, setViewGroupMemberModal] = useState(false);
   const [addGroupMemberModal, setAddGroupMemberModal] = useState(false);
   const [removeGroupMemberModal, setRemoveGroupMemberModal] = useState(false);
   const [isDocsPreviewModalOpen, setDocsPreviewModalOpen] = useState(false);
+  const [isMenuModalOpen, setMenuModalOpen] = useState(false);
 
-  //
+  // File selection
   const [isSelectionOpen, setSelectionOpen] = useState(false);
   const [selectedDocsIds, setSelectedDocsIds] = useState([]);
   const [filePreviews, setFilePreviews] = useState([]);
@@ -63,11 +79,11 @@ const GroupPage = () => {
   useEffect(() => {
     if (!groupId) return;
 
-    fetchAllUsers();
     fetchGroupDetail(groupId);
     fetchGroupMembers(groupId);
-    if ((user.role = 'admin')) {
-      fetchGroupData(groupId);
+    if (user.role === 'admin') {
+      generateInviteLink(groupId);
+      fetchAllUsers();
     }
   }, [groupId]);
 
@@ -78,7 +94,7 @@ const GroupPage = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
+        setMenuModalOpen(false);
       }
     };
 
@@ -90,25 +106,21 @@ const GroupPage = () => {
   }, []);
 
   const handleDeleteDocument = async () => {
-    // console.log('hey');
-
-    // console.log(selectedDocsIds);
-
     try {
       const response = await api.post('/group/deleteDocuments', {
         selectedDocsIds: selectedDocsIds,
       });
-      console.log(response);
+
       toast.success(response?.data.message || 'Documents deleted', {
         position: 'top-center',
         autoClose: 3000,
         theme: 'colored',
       });
+
       setSelectedDocsIds([]);
       setSelectionOpen(false);
       await fetchGroupData(groupId);
     } catch {
-      console.log(error);
       toast.error(
         error?.response?.data.message ||
           error?.message ||
@@ -123,8 +135,7 @@ const GroupPage = () => {
   };
 
   const leaveGroup = async (userId, groupId) => {
-    console.log(userId);
-    setMenuOpen(false);
+    setMenuModalOpen(false);
     try {
       const response = await api.post(
         '/group/leaveGroup',
@@ -153,10 +164,6 @@ const GroupPage = () => {
       // }, 1000);
       navigate('/groups');
     } catch (error) {
-      console.log(error);
-      // console.log(error?.response?.status);
-      // console.log(error?.response?.data.message);
-
       if (error?.response?.status === 404 || error?.response?.status === 400) {
         toast.error(error?.response?.data.message || error?.message, {
           position: 'top-center',
@@ -173,7 +180,7 @@ const GroupPage = () => {
         userId: user._id,
       };
       const response = await api.get('/group/myGroups', { params: params });
-      //   console.log(response.data?.groups);
+
       const arr = response.data?.groups;
 
       const userGroupIds = arr.map((item) => item.groupId?._id);
@@ -182,7 +189,7 @@ const GroupPage = () => {
 
       // setGroupList(response.data.groups);
     } catch (error) {
-      console.log("Error while fetching user's group", error);
+      // console.log("Error while fetching user's group", error);
     }
   };
 
@@ -229,7 +236,7 @@ const GroupPage = () => {
       setGroupName(response.data?.groupDetail.name);
       setGroupIcon(response.data?.groupDetail.icon);
     } catch (error) {
-      console.log('Error while fetching group detail', error);
+      // console.log('Error while fetching group detail', error);
       toast.error(
         error?.message ||
           error?.response?.data.message ||
@@ -257,11 +264,11 @@ const GroupPage = () => {
         page: pageNumber,
       };
       const response = await api.get('/group/groupData', { params: params });
-      console.log(response.data?.groupDetail);
+
       setGroupDetails(response.data?.groupDetail);
       setTotalPages(response.data?.totalPages);
     } catch (error) {
-      console.log('Error while fetching single group data', error);
+      // console.log('Error while fetching single group data', error);
       setError('Server error while loading group detail');
     } finally {
       setLoading(false);
@@ -275,10 +282,7 @@ const GroupPage = () => {
       };
       const response = await api.get('/group/groupMembers', { params: params });
 
-      console.log(response.data?.groupMembers);
       setGroupMembers(response.data?.groupMembers);
-
-      // console.log(groupMembers);
 
       response.data?.groupMembers.forEach((member) => {
         const memberId = member.userId._id;
@@ -287,25 +291,20 @@ const GroupPage = () => {
         setAlreadyPresentUserIds((prev) => [...prev, memberId]);
       });
     } catch (error) {
-      console.log('Error while fetching group members', error);
+      // console.log('Error while fetching group members', error);
     }
   };
 
   const fetchAllUsers = async () => {
     try {
       const response = await api.get('/admin/getAllusers');
-      console.log(response.data.users);
 
       if (response.status === 200) {
         setAllUsers(response.data.users);
       }
-      // console.log('users');
-
-      // console.log(response);
-      // console.log(alreadyPresentUserIds);
       await fetchGroupMembers(groupId);
     } catch (error) {
-      console.log('Error while fetching all users', error);
+      // console.log('Error while fetching all users', error);
     }
   };
 
@@ -317,15 +316,8 @@ const GroupPage = () => {
         { groupId, selectedUserIds },
         { headers: { 'Content-Type': 'application/json' } },
       );
-
-      if (response.status === 200) {
-        // console.log(response);
-      }
-      // console.log('users');
-
-      // console.log(response);
     } catch (error) {
-      console.log('Error while adding more users', error);
+      // console.log('Error while adding more users', error);
     } finally {
       await fetchGroupMembers(groupId);
       await fetchAllUsers();
@@ -333,19 +325,14 @@ const GroupPage = () => {
   };
 
   const onRemoveMembers = async (selectedUserIds) => {
-    // console.log(selectedUserIds);
     try {
       const response = await api.post(
         '/group/removeMemberFromGroup',
         { groupId, selectedUserIds },
         { headers: { 'Content-Type': 'application/json' } },
       );
-
-      // console.log('users');
-
-      // console.log(response);
     } catch (error) {
-      console.log('Error while removing users', error);
+      // console.log('Error while removing users', error);
       toast.error(error?.response?.data.message || 'Internal Server Error', {
         autoClose: 3000,
         position: 'top-center',
@@ -370,14 +357,22 @@ const GroupPage = () => {
       // console.log(response.data?.inviteLink);
       setInviteLink(response.data?.inviteLink);
     } catch (error) {
-      console.log('Error while generating invite link', error);
+      // console.log('Error while generating invite link', error);
     }
   };
 
-  const handleFileChange = (event) => {
+  const handleFileSelection = (event) => {
+    const files = Array.from(event.target.files);
+    const filteredFiles = files.filter((file) => file.size <= 1048576 * 2);
+    setFiles(filteredFiles);
+    setDocsPreviewModalOpen(true);
+    handleFilePreviews(event);
+  };
+
+  const handleFilePreviews = (event) => {
     const files = Array.from(event.target.files);
     // setFiles(files);
-    console.log(files);
+    // console.log(files);
 
     const previews = files.map((file) => ({
       file,
@@ -385,17 +380,20 @@ const GroupPage = () => {
       type: file.type.split('/')[0],
     }));
     // console.log(previews);
-    // previews.forEach((preview) => console.log(preview.file.name));
-    // files.forEach((file) => console.log(file.name));
+    const filteredPreviews = previews.filter(
+      (preview) => preview.file.size <= 1048576 * 2,
+    );
 
-    setFilePreviews(previews);
+    if (filteredPreviews.length !== previews.length) {
+      toast.warn('File size not more than 2MB.');
+    }
+    files.forEach((file) => console.log(file));
+
+    setFilePreviews(filteredPreviews);
   };
 
   const handleDocumentSubmission = async () => {
     try {
-      // console.log(event.target.files);
-
-      // console.log(Array.isArray(event.target.files));
       setLoading(true);
 
       if (files.length === 0) return;
@@ -409,10 +407,10 @@ const GroupPage = () => {
       const response = await api.post('/group/sendDocument', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      console.log(response.data);
+      toast.success(response?.data.message || 'Documents Uploaded');
       await fetchGroupData(groupId);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       toast.error(
         error?.message ||
           error.response?.data.message ||
@@ -444,26 +442,26 @@ const GroupPage = () => {
             <h1 className="text-4xl ">{groupName}</h1>
           </div>
           <div className=" relative flex items-center justify-center p-4">
-            {isMenuOpen ? (
+            {isMenuModalOpen ? (
               <AiOutlineMenuFold
-                onClick={() => setMenuOpen(false)}
+                onClick={() => setMenuModalOpen(false)}
                 className="w-7 h-7 cursor-pointer"
               />
             ) : (
               <AiOutlineMenuUnfold
-                onClick={() => setMenuOpen(true)}
+                onClick={() => setMenuModalOpen(true)}
                 className="w-7 h-7 cursor-pointer"
               />
             )}
-            {isMenuOpen && (
+            {isMenuModalOpen && (
               <div
                 ref={menuRef}
                 className="absolute top-full right-0 mt-2 z-50"
               >
                 <GroupMenu
                   groupId={groupId}
-                  isMenuOpen={isMenuOpen}
-                  setMenuOpen={setMenuOpen}
+                  isMenuModalOpen={isMenuModalOpen}
+                  setMenuModalOpen={setMenuModalOpen}
                   setSelectedDocsIds={setSelectedDocsIds}
                   isSelectionOpen={isSelectionOpen}
                   setSelectionOpen={setSelectionOpen}
@@ -510,6 +508,7 @@ const GroupPage = () => {
                   }}
                 ></div>
                 <div className="relative bg-gray-400 inset-0 z-100 rounded-md shadow-xl/30 p-6 flex  gap-4 min-w-0 flex-col w-full max-w-2xl">
+                  <h1 className="text-4xl py-2">Selected Files</h1>
                   <div className="flex flex-wrap gap-6 p-6  bg-white/50 backdrop-blur-3xl inset-shadow-xs/45 inset-shadow-gray-500 rounded-md overflow-y-auto hide-scrollbar h-120">
                     {filePreviews.map((preview, index) => {
                       return (
@@ -543,8 +542,97 @@ const GroupPage = () => {
                               className="w-20 h-20 object-cover "
                             />
                           )}
-                          {preview.type === 'application/pdf' && (
-                            <a href={preview.url} alt={`preview ${index}`}></a>
+                          {preview.file.type === 'application/pdf' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={pdfPNG}
+                                alt="pdf"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
+                          )}
+                          {preview.file.type === 'text/html' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={htmlPNG}
+                                alt="html"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
+                          )}
+                          {preview.file.type === 'text/css' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={cssPNG}
+                                alt="css"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
+                          )}
+                          {preview.file.type === 'text/markdown' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={markdownPNG}
+                                alt="markdown"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
+                          )}
+                          {preview.file.type === 'text/plain' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={txtPNG}
+                                alt="txt"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
+                          )}
+                          {preview.file.type ===
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={spreadSheetPNG}
+                                alt="document"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
+                          )}
+                          {preview.file.type === 'text/javascript' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={jsPNG}
+                                alt="js file"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
+                          )}
+                          {preview.file.type === 'application/msword' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={docxPNG}
+                                alt="document"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
+                          )}
+                          {preview.file.type === 'text/json' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={jsonPNG}
+                                alt="json"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
+                          )}
+                          {preview.file.type ===
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' && (
+                            <a href={preview.url} alt={`preview ${index}`}>
+                              <img
+                                src={docxPNG}
+                                alt="document"
+                                className="w-20 h-20 object-cover "
+                              />
+                            </a>
                           )}
                           <p className="text-black truncate w-30">
                             {preview.file.name}
@@ -559,7 +647,7 @@ const GroupPage = () => {
                       onClick={() => handleDocumentSubmission()}
                       className="cursor-pointer bg-fuchsia-600 text-white p-1 px-6 rounded-md hover:bg-fuchsia-800 transition-all"
                     >
-                      Send
+                      Upload
                     </button>
                     <button
                       onClick={(e) => setDocsPreviewModalOpen(false)}
@@ -640,13 +728,104 @@ const GroupPage = () => {
                         className="flex flex-col gap-2 items-center"
                         title={item.fileName}
                       >
-                        <img
-                          src={
-                            item.fileExt !== '.pdf' ? item.documentUrl : pdfPNG
-                          }
-                          alt="pdf"
-                          className="w-20 h-20 object-cover"
-                        />
+                        {item.fileExt === '.pdf' && (
+                          <img
+                            src={pdfPNG}
+                            alt="pdf"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.xlsx' && (
+                          <img
+                            src={spreadSheetPNG}
+                            alt="spreadsheet"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.xls' && (
+                          <img
+                            src={spreadSheetPNG}
+                            alt="spreadsheet"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.docx' && (
+                          <img
+                            src={docxPNG}
+                            alt="document"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.doc' && (
+                          <img
+                            src={docxPNG}
+                            alt="document"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.txt' && (
+                          <img
+                            src={txtPNG}
+                            alt="document"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.html' && (
+                          <img
+                            src={htmlPNG}
+                            alt="html"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.css' && (
+                          <img
+                            src={cssPNG}
+                            alt="css"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.js' && (
+                          <img
+                            src={jsPNG}
+                            alt="pdf"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.json' && (
+                          <img
+                            src={jsonPNG}
+                            alt="pdf"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.md' && (
+                          <img
+                            src={markdownPNG}
+                            alt="pdf"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.jpg' && (
+                          <img
+                            src={item.documentUrl}
+                            alt="pdf"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.jpeg' && (
+                          <img
+                            src={item.documentUrl}
+                            alt="pdf"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                        {item.fileExt === '.png' && (
+                          <img
+                            src={item.documentUrl}
+                            alt="pdf"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
 
                         <span className="text-sm truncate max-w-26">
                           {item.fileName}
@@ -705,11 +884,9 @@ const GroupPage = () => {
               id="document"
               className="hidden"
               onChange={(event) => {
-                setFiles(Array.from(event.target.files));
-                setDocsPreviewModalOpen(true);
-                handleFileChange(event);
+                handleFileSelection(event);
               }}
-              accept="image/*,video/*,audio/*,.pdf"
+              accept="image/jpeg, image/jpg, image/png, image/webp, video/mp4, audio/mp3,text/plain,text/html, 	application/msword, text/css, text/javascript, text/json, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/pdf, text/markdown, application/vnd.ms-excel"
               multiple
             />
           </div>

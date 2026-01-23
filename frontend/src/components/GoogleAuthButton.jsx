@@ -1,7 +1,8 @@
 import { GoogleLogin } from '@react-oauth/google';
+import { useNavigate } from 'react-router-dom';
+
 import api from '../api/axios';
 import useAuthStore from '../hooks/store/useAuthStore';
-import { useNavigate } from 'react-router-dom';
 
 const GoogleAuthButton = ({ mode }) => {
   const { setAuth } = useAuthStore();
@@ -18,7 +19,7 @@ const GoogleAuthButton = ({ mode }) => {
         },
         {
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
 
       // console.log(response);
@@ -34,7 +35,7 @@ const GoogleAuthButton = ({ mode }) => {
         navigate('/', { replace: true });
       }, 1500);
     } catch (error) {
-      console.error('Google auth failed', error);
+      // console.error('Google auth failed', error);
     }
   };
   return (

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { type } from 'os';
+
 const { Schema, model } = mongoose;
 
 const groupSchema = new Schema(
@@ -19,7 +19,7 @@ const groupSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const Group = model('Group', groupSchema);

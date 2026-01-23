@@ -1,4 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom';
+
 import useAuthStore from '../hooks/store/useAuthStore';
 
 const ProtectedRoutes = () => {
@@ -11,9 +12,6 @@ const ProtectedRoutes = () => {
       </div>
     );
   }
-
-  // console.log(user);
-  // console.log(accessToken);
 
   if (!user || !accessToken) {
     return <Navigate to="/login" replace />;

@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { FaL, FaPeopleGroup } from 'react-icons/fa6';
+import { FaPeopleGroup } from 'react-icons/fa6';
 import { MdDeleteOutline, MdGroupAdd } from 'react-icons/md';
 import { MdGroupRemove } from 'react-icons/md';
-import useAuthStore from '../hooks/store/useAuthStore';
 import { LuCornerDownLeft } from 'react-icons/lu';
+
+import useAuthStore from '../hooks/store/useAuthStore.jsx';
 
 const GroupMenu = ({
   groupId,
-  isMenuOpen,
-  setMenuOpen,
+  isMenuModalOpen,
+  setMenuModalOpen,
   setViewGroupMemberModal,
   setAddGroupMemberModal,
   setRemoveGroupMemberModal,
@@ -21,7 +21,7 @@ const GroupMenu = ({
 
   return (
     <>
-      {isMenuOpen && (
+      {isMenuModalOpen && (
         <div className=" min-w-sm w-full bg-fuchsia-100/20 p-4 rounded-lg backdrop-blur-3xl shadow-2xl/30 flex flex-col divide-y divide-gray-300">
           <div
             title="Group Members"
@@ -64,7 +64,7 @@ const GroupMenu = ({
               } else {
                 setSelectionOpen(true);
               }
-              setMenuOpen(false);
+              setMenuModalOpen(false);
             }}
           >
             <MdDeleteOutline className="w-10 h-10 p-3 bg-fuchsia-800 text-fuchsia-100 rounded-full" />

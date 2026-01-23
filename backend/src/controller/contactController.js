@@ -1,11 +1,6 @@
-import {
-  contactDetailService,
-  contactsService,
-  searchContactsService,
-  editContactService,
-  addContactService,
-} from '../services/contactService.js';
+import logger from '../logger.js';
 import ApiError from '../utils/ApiError.js';
+
 import {
   addContactSchema,
   contactDetailSchema,
@@ -13,6 +8,13 @@ import {
   editContactSchema,
   searchContactsSchema,
 } from '../validations/contact.validation.js';
+import {
+  contactDetailService,
+  contactsService,
+  searchContactsService,
+  editContactService,
+  addContactService,
+} from '../services/contactService.js';
 
 export const contacts = async (req, res) => {
   try {
@@ -30,12 +32,13 @@ export const contacts = async (req, res) => {
       req.query.page,
       req.query.limit,
       req.query.field,
-      req.user._id
+      req.user._id,
     );
+    logger.info(response, 'Users all contact');
 
-    // console.log(req.user._id);
-    return res.status(response.status).json({
-      message: response.message,
+    return res.status(200).json({
+      success: true,
+      message: 'Users all contact',
       page: response.page,
       limit: response.limit,
       total: response.total,
@@ -43,6 +46,8 @@ export const contacts = async (req, res) => {
       contacts: response.contacts,
     });
   } catch (error) {
+    logger.error(error, 'Error while fetching all contacts');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -50,8 +55,8 @@ export const contacts = async (req, res) => {
       });
     }
 
-    console.error('Error while fetching all contacts:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -59,14 +64,6 @@ export const contacts = async (req, res) => {
 
 export const searchContacts = async (req, res) => {
   try {
-    // console.log(
-    //   req.query.page,
-    //   req.query.limit,
-    //   req.query.field,
-    //   req.query.search,
-    //   req.user._id
-    // );
-
     const { error } = searchContactsSchema.validate({
       page: req.query.page,
       limit: req.query.limit,
@@ -74,7 +71,6 @@ export const searchContacts = async (req, res) => {
       search: req.query.search,
       contactOwnerId: req.user._id.toString(),
     });
-
     if (error) {
       throw new ApiError(400, error.details[0].message);
     }
@@ -84,13 +80,13 @@ export const searchContacts = async (req, res) => {
       req.query.limit,
       req.query.field,
       req.query.search,
-      req.user._id
+      req.user._id,
     );
+    logger.info(response, 'Search contacts');
 
-    // console.log(response);
-
-    return res.status(response.status).json({
-      message: response.message,
+    return res.status(200).json({
+      success: true,
+      message: 'Search contacts',
       page: response.page,
       limit: response.limit,
       total: response.total,
@@ -98,7 +94,8 @@ export const searchContacts = async (req, res) => {
       contacts: response.contacts,
     });
   } catch (error) {
-    console.error('Error while search the contact:', error);
+    logger.error(error, 'Error while search the contact');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -106,8 +103,8 @@ export const searchContacts = async (req, res) => {
       });
     }
 
-    console.error('Error while search the contact:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -115,8 +112,6 @@ export const searchContacts = async (req, res) => {
 
 export const contactDetail = async (req, res) => {
   try {
-    // console.log(req.query);
-
     const { error } = contactDetailSchema.validate({
       contactId: req.query.contactId,
     });
@@ -126,11 +121,16 @@ export const contactDetail = async (req, res) => {
     }
 
     const response = await contactDetailService(req.query.contactId);
-    return res.status(response.status).json({
-      message: response.message,
+    logger.info(response, 'Single contact detail');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Single contact detail',
       contact: response.contact,
     });
   } catch (error) {
+    logger.error(error, 'Error while getting contact detail');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -138,8 +138,8 @@ export const contactDetail = async (req, res) => {
       });
     }
 
-    console.error('Error while getting contact detail:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -147,14 +147,12 @@ export const contactDetail = async (req, res) => {
 
 export const editContact = async (req, res) => {
   try {
-    // console.log(req.body);
     const { error } = editContactSchema.validate({
       name: req.body.name,
       email: req.body.email,
       phone: req.body.phone,
       contactId: req.body.contactId,
     });
-
     if (error) {
       throw new ApiError(400, error.details[0].message);
     }
@@ -163,14 +161,18 @@ export const editContact = async (req, res) => {
       req.body.name,
       req.body.email,
       req.body.phone,
-      req.body.contactId
+      req.body.contactId,
     );
+    logger.info(response, 'Edit contact');
 
-    return res.status(response.status).json({
-      message: response.message,
+    return res.status(200).json({
+      success: true,
+      message: 'Contact edited',
       contact: response.contact,
     });
   } catch (error) {
+    logger.error(error, 'Error while edit the contact');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -178,8 +180,8 @@ export const editContact = async (req, res) => {
       });
     }
 
-    console.error('error while edit the contact:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }
@@ -203,14 +205,18 @@ export const addContact = async (req, res) => {
       req.body.email,
       req.body.phone,
       req.body.age,
-      req.user._id
+      req.user._id,
     );
+    logger.info(response, 'New contact added');
 
-    return res.status(response.status).json({
-      message: response.message,
+    return res.status(200).json({
+      success: true,
+      message: 'New contact added',
       contactCreated: response.contactCreated,
     });
   } catch (error) {
+    logger.error(error, 'Error while creating new contact');
+
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         success: false,
@@ -218,8 +224,8 @@ export const addContact = async (req, res) => {
       });
     }
 
-    console.error('Error while creating new contact:', error);
     return res.status(500).json({
+      success: false,
       message: 'Internal server error',
     });
   }

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 const { Schema, model } = mongoose;
 
 const contactSchema = new Schema(
@@ -26,7 +27,7 @@ const contactSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const Contact = model('Contact', contactSchema);

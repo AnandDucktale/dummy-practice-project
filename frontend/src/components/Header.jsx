@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom';
+
 import useAuthStore from '../hooks/store/useAuthStore';
 import defaultPic from '../assets/defaultAvatar1.jpg';
+
 const Header = () => {
   const { user } = useAuthStore();
   const profilePic = user.avatar || defaultPic;

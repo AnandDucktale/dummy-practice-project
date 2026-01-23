@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import defaultAvatar from '../../assets/defaultAvatar1.jpg';
 import { IoIosPersonAdd } from 'react-icons/io';
 import { IoClose } from 'react-icons/io5';
+
+import defaultAvatar from '../../assets/defaultAvatar1.jpg';
 
 const AddGroupMemberModal = ({
   copied,
   handleCopy,
   inviteLink,
   alreadyPresentUserIds,
-  groupMembers,
   allUsers,
   onClose,
   onAddMembers,
@@ -19,7 +19,7 @@ const AddGroupMemberModal = ({
     setSelectedUserIds((prev) =>
       selectedUserIds.includes(userId)
         ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
+        : [...prev, userId],
     );
   };
 
@@ -39,7 +39,11 @@ const AddGroupMemberModal = ({
         </div>
         <h1 className="text-3xl text-center">Add New Members</h1>
 
-        {!(allUsers.length === alreadyPresentUserIds.length) ? (
+        {allUsers.length === alreadyPresentUserIds.length && (
+          <div>All users already in this group</div>
+        )}
+
+        {allUsers.length !== alreadyPresentUserIds.length && (
           <ul className="inset-shadow-sm rounded-2xl overflow-y-auto max-h-64 hide-scrollbar bg-gray-50">
             {allUsers.map(
               (user) =>
@@ -77,11 +81,9 @@ const AddGroupMemberModal = ({
                       />
                     </button>
                   </li>
-                )
+                ),
             )}
           </ul>
-        ) : (
-          <div>All users already in this group</div>
         )}
         <p className="w-full text-center">or</p>
         {inviteLink && (

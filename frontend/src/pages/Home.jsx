@@ -1,6 +1,7 @@
-import useAuthStore from '../hooks/store/useAuthStore';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+import useAuthStore from '../hooks/store/useAuthStore';
 
 const Home = () => {
   const { user } = useAuthStore();

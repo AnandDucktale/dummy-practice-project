@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
 import { FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { MdClear } from 'react-icons/md';
 import { GrFormView } from 'react-icons/gr';
@@ -8,11 +9,11 @@ import {
   MdKeyboardDoubleArrowRight,
   MdOutlineModeEditOutline,
 } from 'react-icons/md';
+
 import api from '../api/axios';
 import ContactViewModal from '../components/modals/ContactViewModal';
 import ContactEditModal from '../components/modals/ContactEditModal';
 import AddNewContactModal from '../components/modals/AddNewContactModal';
-import { toast, ToastContainer } from 'react-toastify';
 
 const Contact = () => {
   // All Contacts
@@ -76,7 +77,7 @@ const Contact = () => {
       setContactPhone(response.data.contact.phone);
       setContactAge(response.data.contact.age);
     } catch (error) {
-      console.error(error);
+      // console.error(error);
     }
   };
 
@@ -97,18 +98,14 @@ const Contact = () => {
       });
       // console.log(response);
 
-      if (response.status === 200) {
-        setContacts(response.data.contacts);
-        setTotalPages(response.data.totalPages);
-        setTotalContacts(response.data.totalContacts);
-      } else {
-        setError('Failed to load contacts');
-      }
+      setContacts(response.data.contacts);
+      setTotalPages(response.data.totalPages);
+      setTotalContacts(response.data.totalContacts);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       setError(
         error.response?.data?.message ||
-          'Error occurred on server while fetching the contacts'
+          'Error occurred on server while fetching the contacts',
       );
       toast.error(
         error?.message ||
@@ -118,7 +115,7 @@ const Contact = () => {
           position: 'top-center',
           autoClose: 3000,
           theme: 'colored',
-        }
+        },
       );
     } finally {
       setLoading(false);
@@ -140,7 +137,7 @@ const Contact = () => {
         },
         {
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
       // console.log(response);
 
@@ -148,7 +145,7 @@ const Contact = () => {
       setAddContactModal(false);
       toast.success(response?.data.message || 'Contact created');
     } catch (error) {
-      console.error('New Contact', error);
+      // console.error('New Contact', error);
       toast.error(
         error?.response?.data.message ||
           error?.message ||
@@ -157,7 +154,7 @@ const Contact = () => {
           position: 'top-center',
           theme: 'colored',
           autoClose: 3000,
-        }
+        },
       );
     }
   };
@@ -177,7 +174,7 @@ const Contact = () => {
         },
         {
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
       getContacts();
       toast.success(response.data.message, {
@@ -196,7 +193,7 @@ const Contact = () => {
           position: 'top-center',
           theme: 'colored',
           autoClose: 3000,
-        }
+        },
       );
     }
   };
@@ -228,7 +225,7 @@ const Contact = () => {
         setTotalPages(response.data.totalPages || 1);
       }
     } catch (error) {
-      console.error('Search error:', error);
+      // console.error('Search error:', error);
     } finally {
       setLoading(false);
     }
