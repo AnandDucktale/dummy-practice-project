@@ -35,7 +35,7 @@ const GoogleAuthButton = ({ mode }) => {
         navigate('/', { replace: true });
       }, 1500);
     } catch (error) {
-      console.error('Google auth failed', error);
+      // console.error('Google auth failed', error);
     }
   };
   return (

@@ -36,7 +36,7 @@ export const contacts = async (req, res) => {
     );
     logger.info(response, 'Users all contact');
 
-    return res.status(response.status).json({
+    return res.status(200).json({
       success: true,
       message: 'Users all contact',
       page: response.page,
@@ -84,7 +84,7 @@ export const searchContacts = async (req, res) => {
     );
     logger.info(response, 'Search contacts');
 
-    return res.status(response.status).json({
+    return res.status(200).json({
       success: true,
       message: 'Search contacts',
       page: response.page,
@@ -165,9 +165,9 @@ export const editContact = async (req, res) => {
     );
     logger.info(response, 'Edit contact');
 
-    return res.status(response.status).json({
+    return res.status(200).json({
       success: true,
-      message: 'Edit contact',
+      message: 'Contact edited',
       contact: response.contact,
     });
   } catch (error) {
@@ -207,11 +207,11 @@ export const addContact = async (req, res) => {
       req.body.age,
       req.user._id,
     );
-    logger.info(response, 'Add new contact');
+    logger.info(response, 'New contact added');
 
-    return res.status(response.status).json({
+    return res.status(200).json({
       success: true,
-      message: 'Add new contact',
+      message: 'New contact added',
       contactCreated: response.contactCreated,
     });
   } catch (error) {

@@ -1,35 +1,39 @@
+import mongoose from 'mongoose';
 import Contact from '../models/Contact.js';
 import Document from '../models/Document.js';
 import User from '../models/User.js';
 import UserGroup from '../models/UserGroup.js';
 
-export const getAllUsersService = async ({ page, contactLimit, field }) => {
+export const getAllUsersService = async (
+  { page, contactLimit, field },
+  user,
+) => {
   const skipContacts = (page - 1) * contactLimit;
 
   let users;
   if (field === 'email') {
-    users = await User.find()
+    users = await User.find({ _id: { $ne: user._id } })
       .select('_id email firstName lastName avatar role')
       .sort({ email: 1 })
       .skip(skipContacts)
       .limit(contactLimit);
   } else if (field === 'name') {
-    users = await User.find()
+    users = await User.find({ _id: { $ne: user._id } })
       .select('_id email firstName lastName avatar role')
       .sort({ firstName: 1 })
       .skip(skipContacts)
       .limit(contactLimit);
   } else {
-    users = await User.find()
+    users = await User.find({
+      _id: { $ne: new mongoose.Types.ObjectId(user._id) },
+    })
       .select('_id email firstName lastName avatar role')
       .skip(skipContacts)
       .limit(contactLimit);
   }
 
-  const totalUsers = await User.countDocuments();
+  const totalUsers = users.length;
   const totalPages = Math.ceil(totalUsers / contactLimit);
-
-  // console.log(users);
 
   return {
     users,
@@ -38,9 +42,6 @@ export const getAllUsersService = async ({ page, contactLimit, field }) => {
 };
 
 export const deleteUserService = async (deleteUserId) => {
-  //   console.log(user);
-  //   console.log(deleteUserId);
-
   // Remove user from app
   // 1 delete its contact
   const deletedUserContacts = await Contact.deleteMany({
@@ -56,24 +57,16 @@ export const deleteUserService = async (deleteUserId) => {
   });
   // 4 delete user
   const deletedUserAck = await User.deleteOne({ _id: deleteUserId });
-  // console.log(response);
 
   return;
 };
 
 export const getUserDetailService = async (userId) => {
-  //   console.log(user);
-  //   console.log(deleteUserId);
-
   const user = await User.findOne({ _id: userId }).select(
     '_id firstName lastName email isVerified avatar role',
   );
-  //   console.log(user);
 
   return {
-    success: true,
-    status: 200,
-    message: 'User details.',
     user,
   };
 };
@@ -111,19 +104,8 @@ export const searchUserService = async ({ page, limit, field, search }) => {
     users = await User.find(query).skip(skip).limit(limit);
   }
 
-  // console.log(contacts);
-
   const total = await User.countDocuments(query);
 
-  // if (total === 0) {
-  //   return {
-  //     success: true,
-  //     status: 200,
-  //     contacts,
-  //     totalContacts: 0,
-  //     totalPages: 0,
-  //   };
-  // }
   return {
     success: true,
     status: 200,

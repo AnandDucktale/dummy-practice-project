@@ -357,6 +357,10 @@ export const avatarService = async (avatarFile, userId) => {
     throw new ApiError(400, 'No file uploaded.');
   }
 
+  if (avatarFile.size > 1048576 * 2) {
+    throw new ApiError(400, 'Avatar size should be less than 2MB');
+  }
+
   const user = await User.findById(userId);
 
   const uploadDir = path.join(process.cwd(), 'uploads');

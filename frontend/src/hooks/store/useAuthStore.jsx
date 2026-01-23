@@ -31,7 +31,7 @@ const useAuthStore = create((set, get) => ({
       });
       return response.data.accessToken;
     } catch (error) {
-      console.error('Refresh failed', error.response?.data || error.message);
+      // console.error('Refresh failed', error.response?.data || error.message);
       get().clearAuth();
       return null;
     }

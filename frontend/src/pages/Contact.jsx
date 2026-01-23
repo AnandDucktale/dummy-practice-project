@@ -77,7 +77,7 @@ const Contact = () => {
       setContactPhone(response.data.contact.phone);
       setContactAge(response.data.contact.age);
     } catch (error) {
-      console.error(error);
+      // console.error(error);
     }
   };
 
@@ -98,15 +98,11 @@ const Contact = () => {
       });
       // console.log(response);
 
-      if (response.status === 200) {
-        setContacts(response.data.contacts);
-        setTotalPages(response.data.totalPages);
-        setTotalContacts(response.data.totalContacts);
-      } else {
-        setError('Failed to load contacts');
-      }
+      setContacts(response.data.contacts);
+      setTotalPages(response.data.totalPages);
+      setTotalContacts(response.data.totalContacts);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       setError(
         error.response?.data?.message ||
           'Error occurred on server while fetching the contacts',
@@ -149,7 +145,7 @@ const Contact = () => {
       setAddContactModal(false);
       toast.success(response?.data.message || 'Contact created');
     } catch (error) {
-      console.error('New Contact', error);
+      // console.error('New Contact', error);
       toast.error(
         error?.response?.data.message ||
           error?.message ||
@@ -229,7 +225,7 @@ const Contact = () => {
         setTotalPages(response.data.totalPages || 1);
       }
     } catch (error) {
-      console.error('Search error:', error);
+      // console.error('Search error:', error);
     } finally {
       setLoading(false);
     }

@@ -15,7 +15,7 @@ import {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const response = await getAllUsersService(req.query);
+    const response = await getAllUsersService(req.query, req.user);
     logger.info(response, 'All users for admin');
 
     return res.status(200).json({

@@ -8,6 +8,7 @@ import Group from '../models/Group.js';
 import User from '../models/User.js';
 import UserGroup from '../models/UserGroup.js';
 import Document from '../models/Document.js';
+import logger from '../logger.js';
 
 export const makeGroupService = async (groupName, userIds) => {
   const users = await User.find({
@@ -67,6 +68,9 @@ export const createGroupWithIconService = async (
     throw new ApiError(400, 'Failed to upload group icon');
   }
 
+  if (newGroupIcon.size > 1048576 * 2) {
+    throw new ApiError(400, 'Icon size must be less than 2MB');
+  }
   const uploadDir = path.join(process.cwd(), 'uploads');
 
   if (!fs.existsSync(uploadDir)) {
@@ -253,6 +257,13 @@ export const sendDocumentService = async (userId, groupId, documents) => {
   if (files.length === 0) {
     throw new ApiError(400, 'No files uploaded.');
   }
+
+  const filteredFiles = files.filter((file) => file.size <= 1048576 * 2);
+
+  if (filteredFiles.length !== files.length) {
+    throw new ApiError(400, 'Files size not more than 2MB');
+  }
+
   const uploadDir = path.join(process.cwd(), 'uploads');
 
   if (!fs.existsSync(uploadDir)) {
@@ -261,7 +272,7 @@ export const sendDocumentService = async (userId, groupId, documents) => {
 
   const savedDocuments = [];
 
-  for (const file of files) {
+  for (const file of filteredFiles) {
     const fileExt = path.extname(file.name);
     const fileName = `document-${Date.now()}-${Math.random()
       .toString()

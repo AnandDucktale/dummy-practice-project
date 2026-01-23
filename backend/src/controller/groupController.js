@@ -339,7 +339,7 @@ export const sendDocument = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Document sent',
+      message: 'Document uploaded',
       documents: response.documents,
     });
   } catch (error) {

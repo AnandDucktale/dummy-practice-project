@@ -41,6 +41,10 @@ const Groups = () => {
       if (token) {
         await fetchGroupByInviteToken(token);
       }
+      // console.log(new Date().valueOf());
+      // console.log(new Date().toISOString());
+      // console.log(new Date().toUTCString());
+
       await fetchUserGroups();
     })();
   }, []);
@@ -177,6 +181,14 @@ const Groups = () => {
   const handleIcon = (e) => {
     const imageInput = e.target;
     if (imageInput.files && imageInput.files[0]) {
+      if (imageInput.files[0].size > 1048576 * 2) {
+        toast.warn('Group icon size must be less than 2MB', {
+          position: 'top-center',
+          theme: 'colored',
+          autoClose: 3000,
+        });
+        return;
+      }
       setNewGroupIcon(imageInput.files[0]);
       const fileReader = new FileReader();
       fileReader.onload = (e) => {
@@ -184,6 +196,7 @@ const Groups = () => {
       };
       fileReader.readAsDataURL(imageInput.files[0]);
     }
+    // toast.success('Group icon uploaded');
   };
 
   const loadMoreGroups = async () => {
@@ -246,6 +259,12 @@ const Groups = () => {
       setNewGroupDescription('');
       setNewGroupModalOpen(false);
       await fetchUserGroups();
+
+      toast.success(response?.data.message || 'Group created', {
+        position: 'top-center',
+        theme: 'colored',
+        autoClose: 3000,
+      });
     } catch (error) {
       // console.log(error);
 

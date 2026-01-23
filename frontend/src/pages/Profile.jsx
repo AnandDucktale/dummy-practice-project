@@ -5,6 +5,7 @@ import useAuthStore from '../hooks/store/useAuthStore';
 
 const Profile = () => {
   const { user } = useAuthStore();
+
   return (
     <div className="h-full flex flex-col gap-4 bg-gray-100 p-8">
       {/* <h1 className="text-4xl text-fuchsia-950">Profile</h1> */}

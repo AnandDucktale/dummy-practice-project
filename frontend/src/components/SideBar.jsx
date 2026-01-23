@@ -6,7 +6,6 @@ import api from '../api/axios.js';
 const SideBar = () => {
   const { user, clearAuth } = useAuthStore();
   const navigate = useNavigate();
-  console.log(user);
 
   const baseClass =
     'tracking-widest text-xs uppercase text-center p-4 transition-all';
@@ -16,20 +15,17 @@ const SideBar = () => {
   const inactiveClass =
     'text-fuchsia-950 hover:bg-fuchsia-950/60 hover:backdrop-blur-2xl hover:text-fuchsia-100';
 
-  // console.log(user);
-
   const logout = async () => {
     try {
       const response = await api.post('/user/logout', {});
-      // console.log(response);
+
       clearAuth();
-      console.log(response);
 
       localStorage.setItem('refreshToken', response.data.refreshToken);
 
       navigate('/login', { replace: true });
     } catch (error) {
-      console.error('Logout failed:', error);
+      // console.error('Logout failed:', error);
     }
   };
 

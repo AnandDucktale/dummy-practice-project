@@ -3,8 +3,6 @@ import { IoClose } from 'react-icons/io5';
 import defaultAvatar from '../../assets/defaultAvatar1.jpg';
 
 const ViewGroupMemberModal = ({ groupMembers, onClose }) => {
-  // console.log(groupMembers);
-
   return (
     <div className="fixed flex items-center justify-center inset-0 z-50">
       <div className="inset-0 absolute bg-black/50" onClick={onClose}></div>
