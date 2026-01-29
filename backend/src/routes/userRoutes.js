@@ -1,6 +1,6 @@
 import express from 'express';
 
-import verifyJWT from '../middleware/authenticationMiddleware.js';
+import authentication from '../middleware/authenticationMiddleware.js';
 
 import {
   signup,
@@ -22,9 +22,9 @@ router.post('/signup', signup);
 router.post('/verifyEmail', verifyUserEmail);
 router.post('/login', login);
 router.post('/auth/google', authGoogle);
-router.post('/logout', verifyJWT, logout);
-router.get('/home', verifyJWT, home);
-router.post('/avatar', verifyJWT, avatar);
+router.post('/logout', authentication, logout);
+router.get('/home', authentication, home);
+router.post('/avatar', authentication, avatar);
 router.post('/refreshToken', refreshAccessToken);
 router.post('/resetPassSendOtp', resetPassSendOTP);
 router.post('/resetPassVerifyOtp', resetPassVerifyOTP);

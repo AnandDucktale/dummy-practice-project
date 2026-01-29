@@ -34,7 +34,7 @@ export const contacts = async (req, res) => {
       req.query.field,
       req.user._id,
     );
-    logger.info(response, 'Users all contact');
+    // logger.info(response, 'Users all contact');
 
     return res.status(200).json({
       success: true,
@@ -82,7 +82,7 @@ export const searchContacts = async (req, res) => {
       req.query.search,
       req.user._id,
     );
-    logger.info(response, 'Search contacts');
+    // logger.info(response, 'Search contacts');
 
     return res.status(200).json({
       success: true,
@@ -121,7 +121,7 @@ export const contactDetail = async (req, res) => {
     }
 
     const response = await contactDetailService(req.query.contactId);
-    logger.info(response, 'Single contact detail');
+    // logger.info(response, 'Single contact detail');
 
     return res.status(200).json({
       success: true,
@@ -163,7 +163,7 @@ export const editContact = async (req, res) => {
       req.body.phone,
       req.body.contactId,
     );
-    logger.info(response, 'Edit contact');
+    // logger.info(response, 'Edit contact');
 
     return res.status(200).json({
       success: true,
@@ -207,7 +207,7 @@ export const addContact = async (req, res) => {
       req.body.age,
       req.user._id,
     );
-    logger.info(response, 'New contact added');
+    // logger.info(response, 'New contact added');
 
     return res.status(200).json({
       success: true,

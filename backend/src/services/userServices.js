@@ -113,7 +113,7 @@ export const loginService = async (email, password) => {
   await user.save({ validateBeforeSave: false });
 
   const loggedUser = await User.findById(user._id).select(
-    '_id email firstName lastName avatar isVerified role',
+    '_id email firstName lastName avatar isVerified role ',
   );
 
   return {
@@ -174,6 +174,7 @@ export const authGoogleService = async (googleToken) => {
       lastName: user.lastName,
       avatar: user.avatar,
       isVerified: user.isVerified,
+
       role: user.role,
     },
     accessToken: accessToken,
@@ -346,7 +347,6 @@ export const refreshAccessTokenService = async (incomingRefreshToken) => {
   const accessToken = user.generateAccessToken();
 
   return {
-    status: 200,
     accessToken,
     user,
   };

@@ -238,7 +238,7 @@ export const groupsService = async (user, { page, limit }) => {
   };
 };
 
-export const sendDocumentService = async (userId, groupId, documents) => {
+export const sendDocumentService = async (io, userId, groupId, documents) => {
   if (!userId) {
     throw new ApiError(401, 'User not authenticated.');
   }
@@ -294,6 +294,29 @@ export const sendDocumentService = async (userId, groupId, documents) => {
     savedDocuments.push(document);
   }
 
+  const docsId = savedDocuments.map((doc) => {
+    return doc._id;
+  });
+  // console.log(docsId);
+
+  const groupDetail = await Document.find({
+    _id: { $in: docsId },
+    groupId: groupId,
+  })
+    .populate('senderId', '_id firstName')
+    .populate('groupId', 'name')
+    .select('documentUrl fileName fileExt');
+  const totalDocs = await Document.countDocuments({ groupId: groupId });
+  const totalPages = Math.ceil(totalDocs / 12);
+
+  // console.log(groupDetail);
+
+  // In this way we do exclude the all sockets related to this user and only provide this document to another users in this group
+  io.to(groupId).emit('document:new', {
+    groupDetail,
+    totalPages,
+  });
+
   return {
     documents: savedDocuments,
   };
@@ -316,6 +339,8 @@ export const groupDataService = async ({ groupId, docsLimit, page }) => {
     .select('documentUrl fileName fileExt')
     .skip((page - 1) * docsLimit)
     .limit(docsLimit);
+
+  // logger.info(groupDetail[0]);
 
   if (!groupDetail || groupDetail.length === 0) {
     return {

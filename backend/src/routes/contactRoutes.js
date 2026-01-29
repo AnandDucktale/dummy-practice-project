@@ -1,6 +1,6 @@
 import express from 'express';
 
-import verifyJWT from '../middleware/authenticationMiddleware.js';
+import authentication from '../middleware/authenticationMiddleware.js';
 
 import {
   contacts,
@@ -12,10 +12,10 @@ import {
 
 const router = express.Router();
 
-router.get('/', verifyJWT, contacts);
-router.get('/search', verifyJWT, searchContacts);
-router.get('/getContact', verifyJWT, contactDetail);
-router.post('/editContact', verifyJWT, editContact);
-router.post('/addContact', verifyJWT, addContact);
+router.get('/', authentication, contacts);
+router.get('/search', authentication, searchContacts);
+router.get('/getContact', authentication, contactDetail);
+router.post('/editContact', authentication, editContact);
+router.post('/addContact', authentication, addContact);
 
 export default router;

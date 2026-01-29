@@ -1,3 +1,5 @@
+import logger from '../logger.js';
+
 const verifyRole = async (req, res, next) => {
   try {
     const admin = req.user;
@@ -8,7 +10,11 @@ const verifyRole = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.error('Error while checking roles in authorization: ', error);
+    logger.error(error, 'Error while checking roles in authorization: ');
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
   }
   next();
 };

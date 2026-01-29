@@ -49,7 +49,7 @@ export const signup = async (req, res) => {
     }
 
     const user = await signupService(firstName, lastName, email, password);
-    logger.info(user, 'Verify the email in next step');
+    // logger.info(user, 'Verify the email in next step');
 
     return res.status(201).json({
       success: true,
@@ -85,7 +85,7 @@ export const verifyUserEmail = async (req, res) => {
     }
 
     const response = await verifyEmailService(req.body.email, req.body.userOtp);
-    logger.info(response, 'Email Verified Successfully');
+    // logger.info(response, 'Email Verified Successfully');
 
     return res.status(200).json({
       success: true,
@@ -133,7 +133,7 @@ export const login = async (req, res) => {
     }
 
     const response = await loginService(req.body.email, req.body.password);
-    logger.info(response, 'Successfully logged in');
+    // logger.info(response, 'Successfully logged in');
 
     return res.status(200).json({
       success: true,
@@ -171,7 +171,7 @@ export const authGoogle = async (req, res) => {
     }
 
     const response = await authGoogleService(req.body.googleToken);
-    logger.info(response, 'User auth successful via google');
+    // logger.info(response, 'User auth successful via google');
 
     return res.status(200).json({
       success: true,
@@ -201,7 +201,7 @@ export const logout = async (req, res) => {
   try {
     // console.log(req.user?._id);
     const response = await logoutService(req.user?._id);
-    logger.info(response, 'Logged out successfully');
+    // logger.info(response, 'Logged out successfully');
 
     return res.status(200).json({
       success: true,
@@ -236,7 +236,7 @@ export const resetPassSendOTP = async (req, res) => {
     }
 
     const response = await resetPassSendOTPService(req.body.email);
-    logger.info(response, 'OTP is sent to your email for reset the password');
+    // logger.info(response, 'OTP is sent to your email for reset the password');
 
     return res.status(200).json({
       success: true,
@@ -274,7 +274,7 @@ export const resetPassVerifyOTP = async (req, res) => {
       req.body.email,
       req.body.userOtp,
     );
-    logger.info(response, 'Reset token verify otp');
+    // logger.info(response, 'Reset token verify otp');
 
     return res.status(200).json({
       success: true,
@@ -313,7 +313,7 @@ export const resetPassword = async (req, res) => {
       req.body.userResetToken,
       req.body.newPassword,
     );
-    logger.info(response, 'Password successfully changed');
+    // logger.info(response, 'Password successfully changed');
 
     return res.status(200).json({
       success: true,
@@ -341,13 +341,14 @@ export const refreshAccessToken = async (req, res) => {
     // console.log(req.body);
 
     const response = await refreshAccessTokenService(req.body.refreshToken);
-    logger.info(response, 'Access token refreshed');
+    // logger.info(response, 'Access token refreshed');
 
     return res.status(200).json({
       success: true,
+      message: 'Access token refreshed',
       accessToken: response.accessToken,
       user: response.user,
-      message: 'Access token refreshed',
+      isAuthenticated: response.user.isAuthenticated,
     });
   } catch (error) {
     logger.error(error, 'Refresh access token error');
@@ -369,7 +370,7 @@ export const refreshAccessToken = async (req, res) => {
 export const avatar = async (req, res) => {
   try {
     const response = await avatarService(req.files?.avatar, req.user?._id);
-    logger.info(response, 'File uploaded');
+    // logger.info(response, 'File uploaded');
 
     return res.status(200).json({
       success: true,

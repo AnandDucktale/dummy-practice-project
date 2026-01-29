@@ -25,7 +25,11 @@ const GoogleAuthButton = ({ mode }) => {
       // console.log(response);
 
       // Store in Zustand
-      setAuth(response.data.user, response.data.accessToken);
+      setAuth(
+        response.data.user,
+        response.data.accessToken,
+        response.data.isAuthenticated,
+      );
 
       // local storage
       localStorage.setItem('refreshToken', response.data.refreshToken);

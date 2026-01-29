@@ -78,12 +78,12 @@ const Groups = () => {
 
   const handleConfirmDelete = async (e) => {
     try {
-      e.stopPropagation();
       await handleGroupDelete();
       await fetchUserGroups();
     } catch (error) {
       console.log(error);
     } finally {
+      e.stopPropagation();
       setGroupDeleteModalOpen(false);
       setGroupID(null);
     }
@@ -388,8 +388,8 @@ const Groups = () => {
                         }}
                         className="absolute inset-0 bg-black/20"
                       ></div>
-                      <div className="relative bg-white w-full max-w-md shadow-lg py-10 px-8  flex flex-col items-center gap-8 rounded-lg">
-                        <div
+                      <div className="relative bg-white w-full max-w-md shadow-lg py-10 px-8  flex flex-col items-center gap-8 rounded-lg z-500">
+                        {/* <div
                           onClick={(e) => {
                             setGroupDeleteModalOpen(false);
                             e.stopPropagation();
@@ -397,13 +397,16 @@ const Groups = () => {
                           className="absolute -top-5 -right-5 bg-fuchsia-50 hover:bg-fuchsia-100 transition-all p-2 rounded-full cursor-pointer"
                         >
                           <IoClose className="w-6 h-6" />
-                        </div>
+                        </div> */}
                         <p className="text-xl text-fuchsia-950 font-semibold">
                           Are you sure to delete this group?
                         </p>
                         <div className="flex items-center justify-around w-full gap-4">
                           <button
-                            onClick={(e) => handleConfirmDelete(e)}
+                            onClick={(e) => {
+                              handleConfirmDelete(e);
+                              e.stopPropagation();
+                            }}
                             className="bg-red-400 border-2 border-red-400 text-white  py-2 px-8 rounded-md
                     hover:border-red-600 
                     hover:bg-red-600  cursor-pointer transition-all"
@@ -411,7 +414,10 @@ const Groups = () => {
                             Confirm
                           </button>
                           <button
-                            onClick={(e) => handleDeleteCancel(e)}
+                            onClick={(e) => {
+                              handleDeleteCancel(e);
+                              e.stopPropagation();
+                            }}
                             className="border-2 border-green-400 text-green-400
                     hover:text-green-600
                     hover:border-green-600 py-2 px-8 rounded-md cursor-pointer"

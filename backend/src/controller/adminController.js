@@ -16,7 +16,7 @@ import {
 export const getAllUsers = async (req, res) => {
   try {
     const response = await getAllUsersService(req.query, req.user);
-    logger.info(response, 'All users for admin');
+    // logger.info(response, 'All users for admin');
 
     return res.status(200).json({
       success: true,
@@ -52,7 +52,7 @@ export const deleteUser = async (req, res) => {
     }
 
     const response = await deleteUserService(req.body.deleteUserId);
-    logger.info(response, 'User deleted');
+    // logger.info(response, 'User deleted');
 
     return res.status(200).json({
       success: true,
@@ -86,7 +86,7 @@ export const userDetail = async (req, res) => {
     }
 
     const response = await getUserDetailService(req.body.userId);
-    logger.info(response, 'Admin ask for single user detail');
+    // logger.info(response, 'Admin ask for single user detail');
 
     return res.status(200).json({
       success: true,
@@ -124,7 +124,7 @@ export const searchUser = async (req, res) => {
     }
 
     const response = await searchUserService(req.query);
-    logger.info(response, 'Admin search for users');
+    // logger.info(response, 'Admin search for users');
 
     return res.status(200).json({
       success: true,

@@ -1,6 +1,6 @@
 import express from 'express';
 
-import verifyJWT from '../middleware/authenticationMiddleware.js';
+import authentication from '../middleware/authenticationMiddleware.js';
 import verifyRole from '../middleware/authorizationMiddelware.js';
 
 import {
@@ -25,27 +25,36 @@ import {
 
 const router = express.Router();
 
-router.post('/makeGroup', verifyJWT, verifyRole, makeGroup);
-router.post('/createGroup', verifyJWT, verifyRole, createGroup);
-router.post('/addMemberToGroup', verifyJWT, verifyRole, addMemberToGroup);
+router.post('/makeGroup', authentication, verifyRole, makeGroup);
+router.post('/createGroup', authentication, verifyRole, createGroup);
+router.post('/addMemberToGroup', authentication, verifyRole, addMemberToGroup);
 router.post(
   '/removeMemberFromGroup',
-  verifyJWT,
+  authentication,
   verifyRole,
   removeMemberFromGroup,
 );
-router.get('/showAllGroupsToAdmin', verifyJWT, verifyRole, allGroups);
-router.get('/allUsersInGroup', verifyJWT, verifyRole, allUsersInGroup);
-router.post('/generateInviteToken', verifyJWT, verifyRole, generateInviteToken);
-router.get('/groups', verifyJWT, groups);
-router.post('/fetchGroupByInviteToken', verifyJWT, fetchGroupByInviteToken);
-router.post('/sendDocument', verifyJWT, sendDocument);
-router.get('/groupDetail', verifyJWT, groupDetail);
-router.get('/groupData', verifyJWT, groupData);
-router.get('/groupMembers', verifyJWT, groupMembers);
+router.get('/showAllGroupsToAdmin', authentication, verifyRole, allGroups);
+router.get('/allUsersInGroup', authentication, verifyRole, allUsersInGroup);
+router.post(
+  '/generateInviteToken',
+  authentication,
+  verifyRole,
+  generateInviteToken,
+);
+router.get('/groups', authentication, groups);
+router.post(
+  '/fetchGroupByInviteToken',
+  authentication,
+  fetchGroupByInviteToken,
+);
+router.post('/sendDocument', authentication, sendDocument);
+router.get('/groupDetail', authentication, groupDetail);
+router.get('/groupData', authentication, groupData);
+router.get('/groupMembers', authentication, groupMembers);
 router.get('/validateInviteToken', validateInviteToken);
-router.post('/leaveGroup', verifyJWT, leaveGroup);
-router.post('/deleteDocuments', verifyJWT, deleteDocuments);
-router.post('/deleteGroup', verifyJWT, verifyRole, deleteGroup);
+router.post('/leaveGroup', authentication, leaveGroup);
+router.post('/deleteDocuments', authentication, deleteDocuments);
+router.post('/deleteGroup', authentication, verifyRole, deleteGroup);
 
 export default router;

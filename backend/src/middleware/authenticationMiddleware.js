@@ -1,49 +1,37 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
 
-const verifyJWT = async (req, res, next) => {
+import ApiError from '../utils/ApiError.js';
+import { verifyToken } from '../utils/verifyToken.js';
+
+const authentication = async (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
     return res.status(401).json({
-      success: false,
       message: 'Unauthorized request',
     });
   }
-
-  let decodedToken;
   try {
-    decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-  } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
+    const user = await verifyToken(token);
+
+    req.user = user;
+
+    next();
+  } catch (error) {
+    logger.error(error, 'Logout error');
+
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
         success: false,
-        message: 'Access Token expired',
+        message: error.message,
       });
     }
-    if (err.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid Token',
-      });
-    }
-  }
 
-  const user = await User.findById(decodedToken?._id).select(
-    '-password -refreshToken',
-  );
-  // console.log(user);
-
-  if (!user) {
-    return res.status(401).json({
+    return res.status(500).json({
       success: false,
-      message: 'User is not authenticated',
+      message: 'Internal server error',
     });
   }
-
-  req.user = user;
-
-  next();
 };
 
-export default verifyJWT;
+export default authentication;

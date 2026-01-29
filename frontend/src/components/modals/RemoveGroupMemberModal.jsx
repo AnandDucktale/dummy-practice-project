@@ -4,8 +4,14 @@ import { IoClose } from 'react-icons/io5';
 
 import defaultAvatar from '../../assets/defaultAvatar1.jpg';
 
-const RemoveGroupMemberModal = ({ groupMembers, onClose, onRemoveMembers }) => {
-  const [selectedUserIds, setSelectedUserIds] = useState([]);
+const RemoveGroupMemberModal = ({
+  selectedUserIds,
+  setSelectedUserIds,
+  groupMembers,
+  onClose,
+  onDone,
+}) => {
+  // const [selectedUserIds, setSelectedUserIds] = useState([]);
 
   const toggleUserSelection = (userId) => {
     setSelectedUserIds((prev) =>
@@ -16,7 +22,8 @@ const RemoveGroupMemberModal = ({ groupMembers, onClose, onRemoveMembers }) => {
   };
 
   const handleDone = () => {
-    onRemoveMembers(selectedUserIds);
+    onDone();
+    // onRemoveMembers(selectedUserIds);
     onClose();
   };
   return (

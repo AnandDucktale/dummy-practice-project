@@ -6,7 +6,7 @@ import { LuCornerDownLeft } from 'react-icons/lu';
 import useAuthStore from '../hooks/store/useAuthStore.jsx';
 
 const GroupMenu = ({
-  groupId,
+  // groupId,
   isMenuModalOpen,
   setMenuModalOpen,
   setViewGroupMemberModal,
@@ -15,7 +15,7 @@ const GroupMenu = ({
   isSelectionOpen,
   setSelectionOpen,
   setSelectedDocsIds,
-  leaveGroup,
+  setLeaveGroupModalOpen,
 }) => {
   const { user } = useAuthStore();
 
@@ -75,7 +75,8 @@ const GroupMenu = ({
             className="cursor-pointer flex items-center gap-2 hover:bg-fuchsia-950/20 p-3 rounded-md"
             onClick={(e) => {
               e.stopPropagation();
-              leaveGroup(user._id, groupId);
+              setLeaveGroupModalOpen();
+              // leaveGroup(user._id, groupId);
             }}
           >
             <LuCornerDownLeft className="w-10 h-10 p-3 bg-fuchsia-800 text-fuchsia-100 rounded-full" />

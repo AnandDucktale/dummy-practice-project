@@ -32,6 +32,13 @@ import ViewGroupMemberModal from '../components/modals/ViewGroupMemberModal';
 import GroupMenu from '../components/GroupMenu';
 import RemoveGroupMemberModal from '../components/modals/RemoveGroupMemberModal';
 import defaultGroupIcon from '../assets/group-icon.jpg';
+import DeleteModal from '../components/modals/DeleteModal.jsx';
+import DocsPreviewModal from '../components/modals/DocsPreviewModal.jsx';
+import {
+  joinGroupRoom,
+  leaveGroupRoom,
+} from '../hooks/socket-events/groupEvents.jsx';
+import { getSocket } from '../api/socket.js';
 
 const GroupPage = () => {
   const menuRef = useRef(null);
@@ -69,15 +76,23 @@ const GroupPage = () => {
   const [removeGroupMemberModal, setRemoveGroupMemberModal] = useState(false);
   const [isDocsPreviewModalOpen, setDocsPreviewModalOpen] = useState(false);
   const [isMenuModalOpen, setMenuModalOpen] = useState(false);
+  const [isRemoveMemberModalOpen, setRemoveMemberModalOpen] = useState(false);
+  const [isLeaveGroupModalOpen, setLeaveGroupModalOpen] = useState(false);
 
   // File selection
   const [isSelectionOpen, setSelectionOpen] = useState(false);
   const [selectedDocsIds, setSelectedDocsIds] = useState([]);
   const [filePreviews, setFilePreviews] = useState([]);
   const [files, setFiles] = useState([]);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
 
   useEffect(() => {
     if (!groupId) return;
+    // Socket room
+    joinGroupRoom(groupId);
+
+    // Attach handler to socket
+    getSocket().on('document:new', newDocumentHandler);
 
     fetchGroupDetail(groupId);
     fetchGroupMembers(groupId);
@@ -85,6 +100,13 @@ const GroupPage = () => {
       generateInviteLink(groupId);
       fetchAllUsers();
     }
+    return () => {
+      // Remove handler
+      getSocket().off('document:new', newDocumentHandler);
+
+      // Then leave group
+      leaveGroupRoom(groupId);
+    };
   }, [groupId]);
 
   useEffect(() => {
@@ -104,6 +126,11 @@ const GroupPage = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const newDocumentHandler = ({ groupDetail, totalPages }) => {
+    setGroupDetails((prev) => [...prev, ...groupDetail]);
+    setTotalPages(totalPages);
+  };
 
   const handleDeleteDocument = async () => {
     try {
@@ -331,6 +358,11 @@ const GroupPage = () => {
         { groupId, selectedUserIds },
         { headers: { 'Content-Type': 'application/json' } },
       );
+      toast.success(response?.data.message || 'Members removed from group', {
+        position: 'top-center',
+        autoClose: 3000,
+        theme: 'colored',
+      });
     } catch (error) {
       // console.log('Error while removing users', error);
       toast.error(error?.response?.data.message || 'Internal Server Error', {
@@ -361,6 +393,38 @@ const GroupPage = () => {
     }
   };
 
+  const handleRemoveMemberConfirm = async () => {
+    try {
+      await onRemoveMembers(selectedUserIds);
+    } catch (error) {
+      // console.log(error);
+    } finally {
+      setRemoveMemberModalOpen(false);
+      setSelectedUserIds([]);
+    }
+  };
+
+  const handleRemoveMemberCancel = () => {
+    setRemoveMemberModalOpen(false);
+    setSelectedUserIds([]);
+  };
+
+  const handleLeaveGroupConfirm = async () => {
+    try {
+      await leaveGroup(user._id, groupId);
+    } catch (error) {
+      // console.log(error);
+    } finally {
+      setLeaveGroupModalOpen(false);
+      // setSelectedUserIds(null);
+    }
+  };
+
+  const handleLeaveGroupCancel = () => {
+    setLeaveGroupModalOpen(false);
+    // setSelectedUserIds(null);
+  };
+
   const handleFileSelection = (event) => {
     const files = Array.from(event.target.files);
     const filteredFiles = files.filter((file) => file.size <= 1048576 * 2);
@@ -368,6 +432,7 @@ const GroupPage = () => {
     setDocsPreviewModalOpen(true);
     handleFilePreviews(event);
   };
+  setRemoveGroupMemberModal;
 
   const handleFilePreviews = (event) => {
     const files = Array.from(event.target.files);
@@ -387,7 +452,7 @@ const GroupPage = () => {
     if (filteredPreviews.length !== previews.length) {
       toast.warn('File size not more than 2MB.');
     }
-    files.forEach((file) => console.log(file));
+    // files.forEach((file) => console.log(file));
 
     setFilePreviews(filteredPreviews);
   };
@@ -408,7 +473,7 @@ const GroupPage = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       toast.success(response?.data.message || 'Documents Uploaded');
-      await fetchGroupData(groupId);
+      // await fetchGroupData(groupId);
     } catch (error) {
       // console.log(error);
       toast.error(
@@ -470,6 +535,7 @@ const GroupPage = () => {
                   setRemoveGroupMemberModal={() =>
                     setRemoveGroupMemberModal(true)
                   }
+                  setLeaveGroupModalOpen={() => setLeaveGroupModalOpen(true)}
                   leaveGroup={leaveGroup}
                 />
               </div>
@@ -496,168 +562,35 @@ const GroupPage = () => {
               <RemoveGroupMemberModal
                 groupMembers={groupMembers}
                 onClose={() => setRemoveGroupMemberModal(false)}
-                onRemoveMembers={onRemoveMembers}
+                onDone={() => setRemoveMemberModalOpen(true)}
+                selectedUserIds={selectedUserIds}
+                setSelectedUserIds={setSelectedUserIds}
+              />
+            )}
+            {isRemoveMemberModalOpen && (
+              <DeleteModal
+                modalPurpose={`Are you sure to remove these members?`}
+                handleModalConfirm={handleRemoveMemberConfirm}
+                handleModalCancel={handleRemoveMemberCancel}
+                onClose={() => setRemoveMemberModalOpen(false)}
+              />
+            )}
+            {isLeaveGroupModalOpen && (
+              <DeleteModal
+                modalPurpose={`Are you sure to leave this group?`}
+                handleModalConfirm={handleLeaveGroupConfirm}
+                handleModalCancel={handleLeaveGroupCancel}
+                onClose={() => setLeaveGroupModalOpen(false)}
               />
             )}
             {isDocsPreviewModalOpen && files.length >= 1 && (
-              <div className="fixed flex items-center justify-center inset-0 z-50">
-                <div
-                  className="inset-0 absolute bg-black/50"
-                  onClick={() => {
-                    setDocsPreviewModalOpen(false);
-                  }}
-                ></div>
-                <div className="relative bg-gray-400 inset-0 z-100 rounded-md shadow-xl/30 p-6 flex  gap-4 min-w-0 flex-col w-full max-w-2xl">
-                  <h1 className="text-4xl py-2">Selected Files</h1>
-                  <div className="flex flex-wrap gap-6 p-6  bg-white/50 backdrop-blur-3xl inset-shadow-xs/45 inset-shadow-gray-500 rounded-md overflow-y-auto hide-scrollbar h-120">
-                    {filePreviews.map((preview, index) => {
-                      return (
-                        <div
-                          key={index}
-                          className="relative bg-black/40 backdrop-blur-2xl rounded-xl flex flex-col items-center p-4 w-38 h-38 justify-between"
-                          title={preview.file.name}
-                        >
-                          <div
-                            onClick={() => {
-                              setFiles((prev) =>
-                                prev.filter(
-                                  (item) => item.name !== preview.file.name,
-                                ),
-                              );
-                              setFilePreviews((prev) =>
-                                prev.filter(
-                                  (item) =>
-                                    item.file.name !== preview.file.name,
-                                ),
-                              );
-                            }}
-                            className="absolute top-0 right-0 bg-red-500 w-5 h-5 flex items-center justify-center rounded-bl-md p-1 z-1000 text-white cursor-pointer"
-                          >
-                            <ImCross />
-                          </div>
-                          {preview.type === 'image' && (
-                            <img
-                              src={preview.url}
-                              alt={`preview ${index}`}
-                              className="w-20 h-20 object-cover "
-                            />
-                          )}
-                          {preview.file.type === 'application/pdf' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={pdfPNG}
-                                alt="pdf"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          {preview.file.type === 'text/html' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={htmlPNG}
-                                alt="html"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          {preview.file.type === 'text/css' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={cssPNG}
-                                alt="css"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          {preview.file.type === 'text/markdown' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={markdownPNG}
-                                alt="markdown"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          {preview.file.type === 'text/plain' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={txtPNG}
-                                alt="txt"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          {preview.file.type ===
-                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={spreadSheetPNG}
-                                alt="document"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          {preview.file.type === 'text/javascript' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={jsPNG}
-                                alt="js file"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          {preview.file.type === 'application/msword' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={docxPNG}
-                                alt="document"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          {preview.file.type === 'text/json' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={jsonPNG}
-                                alt="json"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          {preview.file.type ===
-                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' && (
-                            <a href={preview.url} alt={`preview ${index}`}>
-                              <img
-                                src={docxPNG}
-                                alt="document"
-                                className="w-20 h-20 object-cover "
-                              />
-                            </a>
-                          )}
-                          <p className="text-black truncate w-30">
-                            {preview.file.name}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex items-end justify-end gap-4 p-4">
-                    <button
-                      onClick={() => handleDocumentSubmission()}
-                      className="cursor-pointer bg-fuchsia-600 text-white p-1 px-6 rounded-md hover:bg-fuchsia-800 transition-all"
-                    >
-                      Upload
-                    </button>
-                    <button
-                      onClick={(e) => setDocsPreviewModalOpen(false)}
-                      className="bg-fuchsia-600 text-white cursor-pointer p-1 px-6 rounded-md hover:bg-fuchsia-800 transition-all"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <DocsPreviewModal
+                setDocsPreviewModalOpen={setDocsPreviewModalOpen}
+                filePreviews={filePreviews}
+                setFiles={setFiles}
+                setFilePreviews={setFilePreviews}
+                handleDocumentSubmission={handleDocumentSubmission}
+              />
             )}
             <ToastContainer
               position="top-center"

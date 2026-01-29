@@ -18,12 +18,12 @@ const ContactEditModal = ({
         className="absolute inset-0 bg-black/50"
       ></div>
       <form className="relative bg-white rounded-lg shadow-lg p-12 w-full max-w-md flex flex-col items-center gap-4">
-        <div
+        {/* <div
           onClick={onClose}
           className="absolute -top-5 -right-5 bg-fuchsia-50 hover:bg-fuchsia-100 transition-all p-2 rounded-full cursor-pointer"
         >
           <IoClose className="w-6 h-6" />
-        </div>
+        </div> */}
         <h2 className="text-4xl text-fuchsia-950">Edit Details</h2>
         <div className="w-full flex items-end justify-around gap-4">
           <label htmlFor="name" className="font-semibold">
