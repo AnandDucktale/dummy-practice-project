@@ -21,9 +21,17 @@ const documentSchema = new Schema(
       type: String,
       required: true,
     },
+    thumbnail: {
+      type: String,
+      default: '',
+    },
     senderId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
+      required: true,
+    },
+    type: {
+      type: String,
       required: true,
     },
   },

@@ -1,31 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
-import { FaCheck, FaShare } from 'react-icons/fa';
 import { AiOutlineMenuUnfold } from 'react-icons/ai';
 import { AiOutlineMenuFold } from 'react-icons/ai';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import {
-  MdDeleteOutline,
-  MdKeyboardDoubleArrowLeft,
-  MdKeyboardDoubleArrowRight,
-} from 'react-icons/md';
 import { IoMdArrowRoundBack } from 'react-icons/io';
-import { ImCross } from 'react-icons/im';
 import { TiCancel } from 'react-icons/ti';
 
 import api from '../api/axios';
-import pdfPNG from '../assets/pdf.png';
-import cssPNG from '../assets/css.png';
-import spreadSheetPNG from '../assets/spreadsheet.png';
-import jsonPNG from '../assets/json.png';
-import jsPNG from '../assets/javascript.png';
-import htmlPNG from '../assets/html.png';
-import videoPNG from '../assets/video.png';
-import audioPNG from '../assets/audio.png';
-import markdownPNG from '../assets/markdown.png';
-import docxPNG from '../assets/document.png';
-import txtPNG from '../assets/txt.png';
 import useAuthStore from '../hooks/store/useAuthStore.jsx';
 import AddGroupMemberModal from '../components/modals/AddGroupMemberModal';
 import ViewGroupMemberModal from '../components/modals/ViewGroupMemberModal';
@@ -39,6 +20,14 @@ import {
   leaveGroupRoom,
 } from '../hooks/socket-events/groupEvents.jsx';
 import { getSocket } from '../api/socket.js';
+import Pagination from '../components/Pagination.jsx';
+import LoadingSpin from '../components/LoadingSpin.jsx';
+import NoData from '../components/NoData.jsx';
+import DocShareButton from '../components/DocShareButton.jsx';
+import DelDocButton from '../components/DelDocButton.jsx';
+import { uploadDocument } from '../services/groupPage.services.js';
+import GroupPageDocuments from '../components/GroupPageDocuments.jsx';
+import Error from '../components/Error.jsx';
 
 const GroupPage = () => {
   const menuRef = useRef(null);
@@ -127,9 +116,17 @@ const GroupPage = () => {
     };
   }, []);
 
-  const newDocumentHandler = ({ groupDetail, totalPages }) => {
-    setGroupDetails((prev) => [...prev, ...groupDetail]);
-    setTotalPages(totalPages);
+  const toastParameters = {
+    position: 'top-center',
+    autoClose: 3000,
+    theme: 'colored',
+  };
+
+  const newDocumentHandler = async () => {
+    if (pageNumber === 1) {
+      setGroupDetails([]);
+      await fetchGroupData(groupId);
+    }
   };
 
   const handleDeleteDocument = async () => {
@@ -138,11 +135,10 @@ const GroupPage = () => {
         selectedDocsIds: selectedDocsIds,
       });
 
-      toast.success(response?.data.message || 'Documents deleted', {
-        position: 'top-center',
-        autoClose: 3000,
-        theme: 'colored',
-      });
+      toast.success(
+        response?.data.message || 'Documents deleted',
+        toastParameters,
+      );
 
       setSelectedDocsIds([]);
       setSelectionOpen(false);
@@ -152,11 +148,7 @@ const GroupPage = () => {
         error?.response?.data.message ||
           error?.message ||
           'Inernal Server Error',
-        {
-          position: 'top-center',
-          autoClose: 3000,
-          theme: 'colored',
-        },
+        toastParameters,
       );
     }
   };
@@ -171,7 +163,7 @@ const GroupPage = () => {
           headers: { 'Content-Type': 'application/json' },
         },
       );
-      console.log(response);
+      // console.log(response);
       // const groupIds = await fetchUserGroupIds();
       // console.log(groupIds);
 
@@ -192,11 +184,10 @@ const GroupPage = () => {
       navigate('/groups');
     } catch (error) {
       if (error?.response?.status === 404 || error?.response?.status === 400) {
-        toast.error(error?.response?.data.message || error?.message, {
-          position: 'top-center',
-          theme: 'colored',
-          autoClose: 3000,
-        });
+        toast.error(
+          error?.response?.data.message || error?.message,
+          toastParameters,
+        );
       }
     }
   };
@@ -220,32 +211,6 @@ const GroupPage = () => {
     }
   };
 
-  // pagination
-
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setPageNumber(page);
-    }
-  };
-  const getDisplayPages = () => {
-    const pages = [];
-    const maxVisible = 5;
-
-    let startPage = Math.max(1, pageNumber - 2);
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-
-    if (endPage - startPage + 1 < maxVisible) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  };
-  // pagination
-
   const handleCopy = async () => {
     await navigator.clipboard.writeText(inviteLink);
     setCopied(true);
@@ -268,11 +233,7 @@ const GroupPage = () => {
         error?.message ||
           error?.response?.data.message ||
           'Internal server error',
-        {
-          position: 'top-center',
-          theme: 'colored',
-          autoClose: 3000,
-        },
+        toastParameters,
       );
       setError('Server error while loading group detail');
     } finally {
@@ -283,6 +244,7 @@ const GroupPage = () => {
   const fetchGroupData = async (groupId) => {
     setGroupDetails([]);
     setLoading(true);
+    setError('');
 
     try {
       const params = {
@@ -358,18 +320,16 @@ const GroupPage = () => {
         { groupId, selectedUserIds },
         { headers: { 'Content-Type': 'application/json' } },
       );
-      toast.success(response?.data.message || 'Members removed from group', {
-        position: 'top-center',
-        autoClose: 3000,
-        theme: 'colored',
-      });
+      toast.success(
+        response?.data.message || 'Members removed from group',
+        toastParameters,
+      );
     } catch (error) {
       // console.log('Error while removing users', error);
-      toast.error(error?.response?.data.message || 'Internal Server Error', {
-        autoClose: 3000,
-        position: 'top-center',
-        theme: 'colored',
-      });
+      toast.error(
+        error?.response?.data.message || 'Internal Server Error',
+        toastParameters,
+      );
     } finally {
       await fetchGroupData(groupId);
       await fetchGroupMembers(groupId);
@@ -425,16 +385,25 @@ const GroupPage = () => {
     // setSelectedUserIds(null);
   };
 
-  const handleFileSelection = (event) => {
+  const handleFileSelection = async (event) => {
+    await handleFilePreviews(event);
     const files = Array.from(event.target.files);
-    const filteredFiles = files.filter((file) => file.size <= 1048576 * 2);
+    const filteredFiles = files.filter((file) => {
+      if (file.type === 'video/mp4' || file.type === 'video/mpeg') {
+        return file.size <= 1048576 * 15;
+      } else if (file.type === 'audio/mpeg') {
+        return file.size <= 1048576 * 5;
+      } else {
+        return file.size <= 1048576 * 2;
+      }
+    });
+
     setFiles(filteredFiles);
     setDocsPreviewModalOpen(true);
-    handleFilePreviews(event);
   };
-  setRemoveGroupMemberModal;
+  // setRemoveGroupMemberModal;
 
-  const handleFilePreviews = (event) => {
+  const handleFilePreviews = async (event) => {
     const files = Array.from(event.target.files);
     // setFiles(files);
     // console.log(files);
@@ -444,55 +413,104 @@ const GroupPage = () => {
       url: URL.createObjectURL(file),
       type: file.type.split('/')[0],
     }));
-    // console.log(previews);
-    const filteredPreviews = previews.filter(
-      (preview) => preview.file.size <= 1048576 * 2,
-    );
+
+    const filteredPreviews = previews.filter((preview) => {
+      if (preview.type === 'video') {
+        return preview.file.size <= 1048576 * 15;
+      } else if (preview.type === 'audio') {
+        return preview.file.size <= 1048576 * 5;
+      } else {
+        return preview.file.size <= 1048576 * 2;
+      }
+    });
+
+    const fetchThumbnail = async () => {
+      for (let preview of filteredPreviews) {
+        if (preview.type === 'video') {
+          // console.log(preview.split('blob:')[0]);
+
+          const thumbnailBlob = await getThumbnail(preview.file);
+
+          const url = URL.createObjectURL(thumbnailBlob);
+
+          preview.thumbnail = url;
+          // preview.thumbnail = thumbnailBlob;
+          // console.log(preview);
+          // console.log(thumbnailBlob);
+        }
+      }
+    };
+    await fetchThumbnail();
 
     if (filteredPreviews.length !== previews.length) {
-      toast.warn('File size not more than 2MB.');
+      toast.warn('File size not more than its limit');
     }
     // files.forEach((file) => console.log(file));
 
     setFilePreviews(filteredPreviews);
   };
 
+  const getThumbnail = async (videoFile, seekTime = 0.2) => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      const url = URL.createObjectURL(videoFile);
+
+      video.src = url;
+      video.muted = true;
+      video.playsInline = true;
+
+      video.addEventListener('loadeddata', () => {
+        video.currentTime = Math.min(seekTime, video.duration);
+      });
+
+      video.addEventListener('seeked', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(url);
+            resolve(blob);
+          },
+          'image/jpeg',
+          0.75,
+        );
+
+        // const dataUrl = canvas.toDataURL('image/jpeg');
+        // resolve(dataUrl);
+      });
+
+      video.onerror = (err) => reject('Video loading failed');
+    });
+  };
+
   const handleDocumentSubmission = async () => {
     try {
       setLoading(true);
 
-      if (files.length === 0) return;
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('documents', file);
-      });
+      const data = await uploadDocument({ files, groupId });
 
-      formData.append('groupId', groupId);
+      toast.success(data.message || 'Documents Uploaded', toastParameters);
 
-      const response = await api.post('/group/sendDocument', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      toast.success(response?.data.message || 'Documents Uploaded');
-      // await fetchGroupData(groupId);
-    } catch (error) {
-      // console.log(error);
-      toast.error(
-        error?.message ||
-          error.response?.data.message ||
-          'Internal server error',
-        {
-          position: 'top-center',
-          theme: 'colored',
-          autoClose: 3000,
-        },
-      );
-    } finally {
       setDocsPreviewModalOpen(false);
       setFilePreviews([]);
       setFiles([]);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          error.message ||
+          'Internal server error',
+        toastParameters,
+      );
+    } finally {
       setLoading(false);
     }
   };
+
   return (
     <div className="h-full w-full bg-gray-100 ">
       <div className="flex flex-col h-full">
@@ -623,8 +641,14 @@ const GroupPage = () => {
           </div>
           {loading && (
             <div className="h-full flex items-center justify-center ">
-              <div className="h-12 w-12 rounded-full border-t-4 border-r-4 border-b-4 border-4 border-t-fuchsia-800 border-r-fuchsia-800 border-b-fuchsia-700 border-fuchsia-300 animate-spin"></div>
+              <LoadingSpin />
             </div>
+          )}
+          {!loading && !error && groupDetails.length === 0 && (
+            <NoData cause={` No document available. . .`} />
+          )}{' '}
+          {!loading && error && (
+            <Error refresh={() => fetchGroupData(groupId)} error={error} />
           )}
           {user && groupDetails.length !== 0 && (
             <ul className="grid xl:grid-cols-6  md:grid-cols-4 sm:grid-cols-2 gap-6">
@@ -633,281 +657,32 @@ const GroupPage = () => {
 
                 return (
                   <li key={item._id}>
-                    <div className="bg-black/10 backdrop-blur-2xl rounded-lg shadow-2xl/10 p-4 flex flex-col items-center overflow-hidden relative">
-                      {isSelectionOpen &&
-                        (isCurrentUser || user.role === 'admin') && (
-                          <div
-                            onClick={() => {
-                              selectedDocsIds.includes(item._id)
-                                ? setSelectedDocsIds((prev) =>
-                                    prev.filter((id) => id !== item._id),
-                                  )
-                                : setSelectedDocsIds((prev) => [
-                                    ...prev,
-                                    item._id,
-                                  ]);
-                            }}
-                            className="absolute top-1 right-1  border bg-white rounded-full w-4 h-4 overflow-hidden cursor-pointer"
-                          >
-                            {selectedDocsIds.includes(item._id) && (
-                              <FaCheck className="w-full h-full text-white bg-fuchsia-600 p-1 " />
-                            )}
-                          </div>
-                        )}
-                      <a
-                        href={item.documentUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex flex-col gap-2 items-center"
-                        title={item.fileName}
-                      >
-                        {item.fileExt === '.pdf' && (
-                          <img
-                            src={pdfPNG}
-                            alt="pdf"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.xlsx' && (
-                          <img
-                            src={spreadSheetPNG}
-                            alt="spreadsheet"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.xls' && (
-                          <img
-                            src={spreadSheetPNG}
-                            alt="spreadsheet"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.docx' && (
-                          <img
-                            src={docxPNG}
-                            alt="document"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.doc' && (
-                          <img
-                            src={docxPNG}
-                            alt="document"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.txt' && (
-                          <img
-                            src={txtPNG}
-                            alt="document"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.html' && (
-                          <img
-                            src={htmlPNG}
-                            alt="html"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.css' && (
-                          <img
-                            src={cssPNG}
-                            alt="css"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.js' && (
-                          <img
-                            src={jsPNG}
-                            alt="pdf"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.json' && (
-                          <img
-                            src={jsonPNG}
-                            alt="pdf"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.md' && (
-                          <img
-                            src={markdownPNG}
-                            alt="pdf"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.jpg' && (
-                          <img
-                            src={item.documentUrl}
-                            alt="pdf"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.jpeg' && (
-                          <img
-                            src={item.documentUrl}
-                            alt="pdf"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-                        {item.fileExt === '.png' && (
-                          <img
-                            src={item.documentUrl}
-                            alt="pdf"
-                            className="w-20 h-20 object-cover"
-                          />
-                        )}
-
-                        <span className="text-sm truncate max-w-26">
-                          {item.fileName}
-                        </span>
-
-                        <p className="text-xs">
-                          <span>
-                            {isCurrentUser ? (
-                              'You'
-                            ) : (
-                              <span>
-                                Sent by{' '}
-                                <span className="text-fuchsia-700">
-                                  {item?.senderId?.firstName}
-                                </span>
-                              </span>
-                            )}
-                          </span>
-                        </p>
-                      </a>
-                    </div>
+                    <GroupPageDocuments
+                      isSelectionOpen={isSelectionOpen}
+                      isCurrentUser={isCurrentUser}
+                      user={user}
+                      selectedDocsIds={selectedDocsIds}
+                      setSelectedDocsIds={setSelectedDocsIds}
+                      item={item}
+                    />
                   </li>
                 );
               })}
             </ul>
           )}
-          {!loading && !error && groupDetails.length === 0 && (
-            <div className="flex flex-1 items-center justify-center">
-              No document available. . .
-            </div>
-          )}{' '}
-          {!loading && error && (
-            <div className="h-full flex items-center justify-center">
-              <div className="bg-red-100 p-4 text-red-600 border rounded-md flex flex-col items-center justify-center gap-6 shadow-2xl/30">
-                <span className="">Error : {error}</span>
-                <button
-                  onClick={fetchGroupData}
-                  className="cursor-pointer border p-1 px-4 rounded-md hover:bg-red-300"
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
-          )}
-          <div className="fixed bottom-20 right-10 text-4xl ">
-            <label
-              htmlFor="document"
-              className="text-white cursor-pointer p-4 bg-fuchsia-800 rounded-full w-16 h-16 flex items-center justify-center"
-              title="Share Document"
-            >
-              <FaShare className="w-4 h-4" />
-            </label>
-            <input
-              type="file"
-              name="document"
-              id="document"
-              className="hidden"
-              onChange={(event) => {
-                handleFileSelection(event);
-              }}
-              accept="image/jpeg, image/jpg, image/png, image/webp, video/mp4, audio/mp3,text/plain,text/html, 	application/msword, text/css, text/javascript, text/json, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/pdf, text/markdown, application/vnd.ms-excel"
-              multiple
-            />
-          </div>
+          {/* Document sharing button */}
+          <DocShareButton handleFileSelection={handleFileSelection} />
+          {/* Document delete button */}
           {isSelectionOpen && selectedDocsIds.length >= 1 && (
-            <div className="fixed bottom-20 right-30 text-4xl ">
-              <div
-                onClick={handleDeleteDocument}
-                className="text-white cursor-pointer p-4 bg-fuchsia-800 rounded-full w-16 h-16 flex items-center justify-center"
-                title="Delete Document"
-              >
-                <MdDeleteOutline className="w-6 h-6" />
-              </div>
-            </div>
+            <DelDocButton handleDeleteDocument={handleDeleteDocument} />
           )}
           {/* Pagination */}
           {!loading && totalPages > 1 && (
-            <div className="p-6 max-w-3xl w-full  min-w-0 ">
-              <div className="flex justify-around items-center gap-4 ">
-                {/* First page and Previous page */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => goToPage(1)}
-                    disabled={pageNumber === 1}
-                    className="p-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 disabled:hover:bg-gray-100 rounded-full"
-                    title="First Page"
-                  >
-                    <MdKeyboardDoubleArrowLeft />
-                  </button>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => goToPage(pageNumber - 1)}
-                    disabled={pageNumber === 1}
-                    className="p-2 cursor-pointer  disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 disabled:hover:bg-gray-100 rounded-full "
-                    title="Previous Page"
-                  >
-                    <FiChevronLeft />
-                  </button>
-                </div>
-
-                {/* Page Numbers */}
-                <div className="flex items-center gap-1">
-                  {getDisplayPages().map((page) => {
-                    return (
-                      <div key={page} className="flex items-center">
-                        <button
-                          onClick={() => goToPage(page)}
-                          className={`w-10 h-10 rounded-full mx-1 cursor-pointer ${
-                            pageNumber === page
-                              ? 'bg-fuchsia-600 text-white'
-                              : 'hover:bg-gray-200'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Last page and Next Page */}
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => goToPage(pageNumber + 1)}
-                    disabled={pageNumber === totalPages}
-                    className="p-2 cursor-pointer  disabled:opacity-50 disabled:cursor-not-allowed
-                                     hover:bg-gray-200
-                                     disabled:hover:bg-gray-100  rounded-full"
-                    title="Next Page"
-                  >
-                    <FiChevronRight />
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => goToPage(totalPages)}
-                    disabled={pageNumber === totalPages}
-                    className="p-2 cursor-pointer  disabled:opacity-50 disabled:cursor-not-allowed
-                                     hover:bg-gray-300
-                                     disabled:hover:bg-gray-100  rounded-full"
-                    title="Jump to last Page"
-                  >
-                    <MdKeyboardDoubleArrowRight />
-                  </button>
-                </div>
-              </div>
-            </div>
+            <Pagination
+              totalPages={totalPages}
+              pageNumber={pageNumber}
+              setPageNumber={setPageNumber}
+            />
           )}
         </div>
       </div>

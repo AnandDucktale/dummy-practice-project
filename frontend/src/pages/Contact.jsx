@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
-import { FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiSearch } from 'react-icons/fi';
 import { MdClear } from 'react-icons/md';
 import { GrFormView } from 'react-icons/gr';
 import { GrFormViewHide } from 'react-icons/gr';
-import {
-  MdKeyboardDoubleArrowLeft,
-  MdKeyboardDoubleArrowRight,
-  MdOutlineModeEditOutline,
-} from 'react-icons/md';
+import { MdOutlineModeEditOutline } from 'react-icons/md';
 
 import api from '../api/axios';
 import ContactViewModal from '../components/modals/ContactViewModal';
 import ContactEditModal from '../components/modals/ContactEditModal';
 import AddNewContactModal from '../components/modals/AddNewContactModal';
+import Pagination from '../components/Pagination';
+import LoadingSpin from '../components/LoadingSpin';
+import NoData from '../components/NoData';
 
 const Contact = () => {
   // All Contacts
@@ -231,32 +230,6 @@ const Contact = () => {
     }
   };
 
-  // Pagination Navigation
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setPageNumber(page);
-    }
-  };
-
-  // Page Numbers to Display
-  const getDisplayPages = () => {
-    const pages = [];
-    const maxVisible = 5;
-
-    let startPage = Math.max(1, pageNumber - 2);
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-
-    if (endPage - startPage + 1 < maxVisible) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  };
-
   return (
     <>
       <ToastContainer position="top-center" autoClose={3000} theme="colored" />
@@ -322,6 +295,46 @@ const Contact = () => {
             </div>
           </div>
 
+          {/* Add new Contact Modal */}
+          {isAddContactModal && (
+            <AddNewContactModal
+              isOpen={isAddContactModal}
+              onClose={() => setAddContactModal(false)}
+              onSave={addContact}
+              setContactAge={setContactAge}
+              setContactName={setContactName}
+              setContactEmail={setContactEmail}
+              setContactPhone={setContactPhone}
+            />
+          )}
+
+          {/* Edit Modal */}
+          {isEditModalOpen && (
+            <ContactEditModal
+              isOpen={isEditModalOpen}
+              onClose={() => setEditModalOpen(false)}
+              contactName={contactName}
+              setContactName={setContactName}
+              contactEmail={contactEmail}
+              setContactEmail={setContactEmail}
+              contactPhone={contactPhone}
+              setContactPhone={setContactPhone}
+              onSave={editContact}
+            />
+          )}
+
+          {/* View Modal */}
+
+          {isViewModalOpen && (
+            <ContactViewModal
+              isOpen={isViewModalOpen}
+              onClose={() => setViewModalOpen(false)}
+              name={contactName}
+              email={contactEmail}
+              phone={contactPhone}
+            />
+          )}
+
           <main className="flex-1 flex flex-col items-center w-full ">
             <div className="p-4 mb-6 max-w-3xl w-full  overflow-hidden min-w-0">
               <div className="flex justify-between items-center">
@@ -354,26 +367,14 @@ const Contact = () => {
             {/* Contacts*/}
 
             <div className="relative max-w-5xl h-full w-full flex flex-col items-center justify-center">
-              {loading && (
-                <div className="flex items-center justify-center h-12 w-12 rounded-full border-4 border-fuchsia-300  border-b-4 border-l-4 border-t-4 border-b-fuchsia-700 border-l-fuchsia-700 border-t-fuchsia-700 animate-spin"></div>
-              )}
+              {loading && <LoadingSpin />}
 
               {!error && !loading && contacts.length === 0 && (
-                <div className="flex items-center justify-center bg-gray-300 px-20 py-10 rounded-md min-w-0 border">
-                  No contacts available
-                </div>
+                <NoData cause={`No contacts available`} />
               )}
 
               {error && !loading && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
-                  <p className="text-red-600 font-semibold">Error: {error}</p>
-                  <button
-                    onClick={getContacts}
-                    className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 cursor-pointer"
-                  >
-                    Try Again
-                  </button>
-                </div>
+                <Error refresh={getContacts} error={error} />
               )}
 
               {!loading && contacts.length > 0 && (
@@ -431,125 +432,18 @@ const Contact = () => {
                   </table>
                 </div>
               )}
-              {loading && contacts.length !== 0 && (
-                <div className="flex items-center justify-center h-12 w-12 rounded-full border-4 border-fuchsia-300  border-b-4 border-l-4 border-t-4 border-b-fuchsia-700 border-l-fuchsia-700 border-t-fuchsia-700 animate-spin"></div>
-              )}
+              {loading && contacts.length !== 0 && <LoadingSpin />}
             </div>
 
             {/* Pagination Controls */}
             {!loading && totalPages > 1 && (
-              <div className="p-6  max-w-3xl w-full  overflow-hidden min-w-0">
-                <div className="flex justify-around items-center gap-4">
-                  {/* First & Previous */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => goToPage(1)}
-                      disabled={pageNumber === 1}
-                      className="p-2 cursor-pointer  disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 disabled:hover:bg-gray-100 rounded-full "
-                      title="Go to first Page"
-                    >
-                      <MdKeyboardDoubleArrowLeft />
-                    </button>
-                  </div>
-                  <div className="flex  gap-2">
-                    <button
-                      onClick={() => goToPage(pageNumber - 1)}
-                      disabled={pageNumber === 1}
-                      className="p-2 cursor-pointer  disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 disabled:hover:bg-gray-100 rounded-full "
-                      title="Previous Page"
-                    >
-                      <FiChevronLeft />
-                    </button>
-                  </div>
-
-                  {/* Page Numbers */}
-                  <div className="flex items-center gap-1">
-                    {getDisplayPages().map((page) => {
-                      return (
-                        <div key={page} className="flex items-center">
-                          <button
-                            onClick={() => goToPage(page)}
-                            className={`w-10 h-10  rounded-full mx-1 cursor-pointer ${
-                              pageNumber === page
-                                ? 'bg-fuchsia-600 text-white'
-                                : ' hover:bg-gray-200'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => goToPage(pageNumber + 1)}
-                      disabled={pageNumber === totalPages}
-                      className="p-2 cursor-pointer  disabled:opacity-50 disabled:cursor-not-allowed
-                     hover:bg-gray-200
-                     disabled:hover:bg-gray-100  rounded-full"
-                      title="Next Page"
-                    >
-                      <FiChevronRight />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => goToPage(totalPages)}
-                      disabled={pageNumber === totalPages}
-                      className="p-2 cursor-pointer  disabled:opacity-50 disabled:cursor-not-allowed
-                     hover:bg-gray-300
-                     disabled:hover:bg-gray-100  rounded-full"
-                      title="Jump to last Page"
-                    >
-                      <MdKeyboardDoubleArrowRight />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <Pagination
+                totalPages={totalPages}
+                pageNumber={pageNumber}
+                setPageNumber={setPageNumber}
+              />
             )}
           </main>
-
-          {/* Add new Contact Modal */}
-          {isAddContactModal && (
-            <AddNewContactModal
-              isOpen={isAddContactModal}
-              onClose={() => setAddContactModal(false)}
-              onSave={addContact}
-              setContactAge={setContactAge}
-              setContactName={setContactName}
-              setContactEmail={setContactEmail}
-              setContactPhone={setContactPhone}
-            />
-          )}
-
-          {/* Edit Modal */}
-          {isEditModalOpen && (
-            <ContactEditModal
-              isOpen={isEditModalOpen}
-              onClose={() => setEditModalOpen(false)}
-              contactName={contactName}
-              setContactName={setContactName}
-              contactEmail={contactEmail}
-              setContactEmail={setContactEmail}
-              contactPhone={contactPhone}
-              setContactPhone={setContactPhone}
-              onSave={editContact}
-            />
-          )}
-
-          {/* View Modal */}
-
-          {isViewModalOpen && (
-            <ContactViewModal
-              isOpen={isViewModalOpen}
-              onClose={() => setViewModalOpen(false)}
-              name={contactName}
-              email={contactEmail}
-              phone={contactPhone}
-            />
-          )}
         </div>
       </div>
     </>

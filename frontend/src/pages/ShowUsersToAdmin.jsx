@@ -16,6 +16,9 @@ import api from '../api/axios';
 import defaultAvatar from '../assets/defaultAvatar1.jpg';
 import DeleteModal from '../components/modals/DeleteModal';
 import ViewUserDetailModal from '../components/modals/ViewUserDetailModal';
+import NoData from '../components/NoData';
+import LoadingSpin from '../components/LoadingSpin';
+import Error from '../components/Error';
 
 const ShowusersToAdmin = () => {
   const { user } = useAuthStore();
@@ -267,26 +270,14 @@ const ShowusersToAdmin = () => {
             <div className=" h-full w-full flex flex-col items-center justify-between">
               {loading && (
                 <div className="h-full w-full flex flex-col items-center justify-center">
-                  <div className="flex  items-center justify-center h-12 w-12 rounded-full border-4 border-fuchsia-300  border-b-4 border-l-4 border-t-4 border-b-fuchsia-700 border-l-fuchsia-700 border-t-fuchsia-700 animate-spin"></div>
+                  <LoadingSpin />
                 </div>
               )}
               {!loading && !error && users.length === 0 && (
-                <div className="flex h-full w-full items-center justify-center text-gray-500 text-lg">
-                  No user available
-                </div>
+                <NoData cause={` No user available`} />
               )}
               {error && !loading && (
-                <div className="h-full w-full flex flex-col items-center justify-center">
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
-                    <p className="text-red-600 font-semibold">Error: {error}</p>
-                    <button
-                      onClick={fetchAllusers}
-                      className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 cursor-pointer"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                </div>
+                <Error refresh={fetchAllusers} error={error} />
               )}
               {/* Delete Modal */}
               {isDeleteModalOpen && (

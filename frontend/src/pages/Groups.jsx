@@ -9,6 +9,7 @@ import defaultGroupIcon from '../assets/group-icon.jpg';
 import NewGroupModal from '../components/modals/NewGroupModal';
 import api from '../api/axios';
 import useAuthStore from '../hooks/store/useAuthStore';
+import LoadingSpin from '../components/LoadingSpin';
 
 const Groups = () => {
   const { user } = useAuthStore();
@@ -321,14 +322,12 @@ const Groups = () => {
         >
           {isLoading && groupList.length === 0 && (
             <div className="flex h-full w-full items-center justify-center">
-              <div className="animate-spin border-4 border-fuchsia-200 border-t-fuchsia-700 border-r-fuchsia-700 border-b-fuchsia-700 rounded-full w-12 h-12" />
+              <LoadingSpin />
             </div>
           )}
 
           {!isLoading && groupList.length === 0 && !error && (
-            <div className="flex h-full w-full items-center justify-center text-gray-500 text-lg">
-              No groups available
-            </div>
+            <NoData cause={`No groups available`} />
           )}
 
           {!isLoading && error && groupList.length === 0 && (

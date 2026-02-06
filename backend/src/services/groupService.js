@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import fs, { mkdir } from 'fs';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegPath from 'ffmpeg-static';
+import pdf from 'pdf-poppler';
 
 import ApiError from '../utils/ApiError.js';
 
@@ -9,6 +12,8 @@ import User from '../models/User.js';
 import UserGroup from '../models/UserGroup.js';
 import Document from '../models/Document.js';
 import logger from '../logger.js';
+
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 export const makeGroupService = async (groupName, userIds) => {
   const users = await User.find({
@@ -257,8 +262,17 @@ export const sendDocumentService = async (io, userId, groupId, documents) => {
   if (files.length === 0) {
     throw new ApiError(400, 'No files uploaded.');
   }
+  // console.log(files);
 
-  const filteredFiles = files.filter((file) => file.size <= 1048576 * 2);
+  const filteredFiles = files.filter((file) => {
+    if (file.mimetype === 'video/mp4' || file.mimetype === 'video/mpeg') {
+      return file.size <= 1048576 * 15;
+    } else if (file.mimetype === 'audio/mpeg') {
+      return file.size <= 1048576 * 5;
+    } else {
+      return file.size <= 1048576 * 2;
+    }
+  });
 
   if (filteredFiles.length !== files.length) {
     throw new ApiError(400, 'Files size not more than 2MB');
@@ -279,16 +293,47 @@ export const sendDocumentService = async (io, userId, groupId, documents) => {
       .slice(2)}${fileExt}`;
 
     const uploadPath = path.join(uploadDir, fileName);
+
     await file.mv(uploadPath);
+    // await new Promise((r) => setTimeout(r, 300));
+
+    let thumbnailName = `thumbnail-${Date.now()}-${Math.random()
+      .toString()
+      .slice(2)}.jpg`;
+    const thumbDir = path.join(process.cwd(), 'uploads', 'thumbnails');
+    if (file.mimetype.startsWith('video/')) {
+      await new Promise((resolve, reject) => {
+        ffmpeg(uploadPath)
+          .screenshots({
+            timestamps: ['00:00:00.100'],
+            filename: thumbnailName,
+            folder: thumbDir,
+            size: '640x?',
+          })
+          .on('end', resolve)
+          .on('error', reject);
+      });
+    } else if (file.mimetype === 'application/pdf') {
+      await pdf.convert(uploadPath, {
+        format: 'jpeg',
+        out_dir: thumbDir,
+        out_prefix: path.basename(thumbnailName, '.jpg'),
+        page: 1,
+      });
+      thumbnailName = thumbnailName.replace('.jpg', '-1.jpg');
+    }
 
     const fileUrl = `http://localhost:9999/uploads/${fileName}`;
+    const thumbnailUrl = `http://localhost:9999/uploads/thumbnails/${thumbnailName}`;
 
     const document = await Document.create({
       senderId: userId,
       groupId: groupId,
       documentUrl: fileUrl,
+      thumbnail: thumbnailUrl,
       fileName: file.name,
       fileExt: fileExt,
+      type: file?.mimetype,
     });
 
     savedDocuments.push(document);
@@ -311,10 +356,23 @@ export const sendDocumentService = async (io, userId, groupId, documents) => {
 
   // console.log(groupDetail);
 
-  // In this way we do exclude the all sockets related to this user and only provide this document to another users in this group
-  io.to(groupId).emit('document:new', {
-    groupDetail,
-    totalPages,
+  io.to(groupId).emit('document:new');
+
+  // Send global notification
+  const senderInfo = await User.findById({ _id: userId }).select(
+    'avatar firstName lastName',
+  );
+  const members = await UserGroup.find({ groupId: groupId });
+
+  // In this way we do exclude the all sockets related to this user and only provide this document notification to another users in this group
+  const recipitents = members.filter(
+    (member) => member.userId.toString() !== userId.toString(),
+  );
+  recipitents.forEach((recipitent) => {
+    io.to(`user:${recipitent.userId}`).emit('document:notification:new', {
+      senderInfo,
+      documentCount: groupDetail.length,
+    });
   });
 
   return {
@@ -336,7 +394,10 @@ export const groupDataService = async ({ groupId, docsLimit, page }) => {
   const groupDetail = await Document.find({ groupId: groupId })
     .populate('senderId', '_id firstName')
     .populate('groupId', 'name')
-    .select('documentUrl fileName fileExt')
+    .select('documentUrl fileName fileExt thumbnail')
+    .sort({
+      createdAt: -1,
+    })
     .skip((page - 1) * docsLimit)
     .limit(docsLimit);
 
