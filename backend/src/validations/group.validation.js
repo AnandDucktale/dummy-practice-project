@@ -66,7 +66,22 @@ export const sendDocumentSchema = Joi.object({
     .messages({ 'any.required': 'Group Id is required' }),
 });
 
+export const newGroupMessageSchema = Joi.object({
+  userId: objectId
+    .required()
+    .messages({ 'any.required': 'User Id is required' }),
+  groupId: objectId
+    .required()
+    .messages({ 'any.required': 'Group Id is required' }),
+});
+
 export const groupDetailSchema = Joi.object({
+  groupId: objectId
+    .required()
+    .messages({ 'any.required': 'Group Id is required' }),
+});
+
+export const groupMessagesSchema = Joi.object({
   groupId: objectId
     .required()
     .messages({ 'any.required': 'Group Id is required' }),

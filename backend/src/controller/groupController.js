@@ -11,9 +11,11 @@ import {
   groupDataSchema,
   groupDetailSchema,
   groupMembersSchema,
+  groupMessagesSchema,
   groupsSchema,
   leaveGroupSchema,
   makeGroupSchema,
+  newGroupMessageSchema,
   removeMemberFromGroupSchema,
   sendDocumentSchema,
   validateInviteTokenSchema,
@@ -37,6 +39,8 @@ import {
   createGroupWithIconService,
   deleteDocumentsService,
   deleteGroupService,
+  newGroupMessageService,
+  groupMessagesService,
 } from '../services/groupService.js';
 
 export const makeGroup = async (req, res) => {
@@ -359,6 +363,47 @@ export const sendDocument = async (req, res) => {
   }
 };
 
+export const newGroupMessage = async (req, res) => {
+  try {
+    const { error } = newGroupMessageSchema.validate({
+      userId: req.user?._id.toString(),
+      groupId: req.body?.groupId,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.details[0].message);
+    }
+    // console.log(Array.isArray(req.files.documents));
+    // console.log(req.body);
+    const response = await newGroupMessageService(
+      req.io,
+      req.user?._id,
+      req.body,
+      req?.files?.documents,
+    );
+    // logger.info(response, 'Document sent');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Group message sent',
+    });
+  } catch (error) {
+    logger.error(error, 'Group message error');
+
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
 export const groupDetail = async (req, res) => {
   try {
     const { error } = groupDetailSchema.validate({
@@ -378,6 +423,40 @@ export const groupDetail = async (req, res) => {
     });
   } catch (error) {
     logger.error(error, 'Group name error');
+
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const groupMessages = async (req, res) => {
+  try {
+    const { error } = groupMessagesSchema.validate({
+      groupId: req.query.groupId,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.details[0].message);
+    }
+    const response = await groupMessagesService(req.query);
+    // logger.info(response, 'Group Detail');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Group Messages',
+      groupMessages: response.groupMessages,
+    });
+  } catch (error) {
+    logger.error(error, 'Group messages error');
 
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({

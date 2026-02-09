@@ -21,6 +21,8 @@ import {
   groupDetail,
   deleteDocuments,
   deleteGroup,
+  newGroupMessage,
+  groupMessages,
 } from '../controller/groupController.js';
 
 const router = express.Router();
@@ -49,7 +51,9 @@ router.post(
   fetchGroupByInviteToken,
 );
 router.post('/sendDocument', authentication, sendDocument);
+router.post('/newGroupMessage', authentication, newGroupMessage);
 router.get('/groupDetail', authentication, groupDetail);
+router.get('/groupMessages', authentication, groupMessages);
 router.get('/groupData', authentication, groupData);
 router.get('/groupMembers', authentication, groupMembers);
 router.get('/validateInviteToken', validateInviteToken);
