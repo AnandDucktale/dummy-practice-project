@@ -12,6 +12,7 @@ import User from '../models/User.js';
 import UserGroup from '../models/UserGroup.js';
 import Document from '../models/Document.js';
 import logger from '../logger.js';
+import GroupMessage from '../models/GroupMessage.js';
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 
@@ -380,6 +381,163 @@ export const sendDocumentService = async (io, userId, groupId, documents) => {
   };
 };
 
+export const newGroupMessageService = async (io, userId, body, documents) => {
+  const messageType = !body.data && documents ? 'document' : 'text';
+
+  const user = await UserGroup.findOne({
+    userId: userId,
+    groupId: body.groupId,
+  });
+  if (!user) {
+    throw new ApiError(404, 'Only member can send documents.');
+  }
+
+  const savedDocuments = [];
+
+  if (messageType === 'document') {
+    const files = Array.isArray(documents) ? documents : [documents];
+
+    if (files.length === 0) {
+      throw new ApiError(400, 'No files uploaded.');
+    }
+
+    const filteredFiles = files.filter((file) => {
+      if (file.mimetype === 'video/mp4' || file.mimetype === 'video/mpeg') {
+        return file.size <= 1048576 * 15;
+      } else if (file.mimetype === 'audio/mpeg') {
+        return file.size <= 1048576 * 5;
+      } else {
+        return file.size <= 1048576 * 2;
+      }
+    });
+
+    if (filteredFiles.length !== files.length) {
+      throw new ApiError(400, 'Files size not more than its limit');
+    }
+
+    const uploadDir = path.join(process.cwd(), 'uploads');
+
+    // console.log(files);
+
+    // if (!fs.existsSync(uploadDir)) {
+    //   fs.mkdirSync(uploadDir, { recursive: true });
+    // }
+
+    for (const file of filteredFiles) {
+      const fileExt = path.extname(file.name);
+      const fileName = `document-${Date.now()}-${Math.random()
+        .toString()
+        .slice(2)}${fileExt}`;
+
+      const uploadPath = path.join(uploadDir, fileName);
+
+      await file.mv(uploadPath);
+      // await new Promise((r) => setTimeout(r, 300));
+
+      let thumbnailName = `thumbnail-${Date.now()}-${Math.random()
+        .toString()
+        .slice(2)}.jpg`;
+      const thumbDir = path.join(process.cwd(), 'uploads', 'thumbnails');
+      if (file.mimetype.startsWith('video/')) {
+        await new Promise((resolve, reject) => {
+          ffmpeg(uploadPath)
+            .screenshots({
+              timestamps: ['00:00:00.100'],
+              filename: thumbnailName,
+              folder: thumbDir,
+              size: '640x?',
+            })
+            .on('end', resolve)
+            .on('error', reject);
+        });
+      } else if (file.mimetype === 'application/pdf') {
+        await pdf.convert(uploadPath, {
+          format: 'jpeg',
+          out_dir: thumbDir,
+          out_prefix: path.basename(thumbnailName, '.jpg'),
+          page: 1,
+        });
+        thumbnailName = thumbnailName.replace('.jpg', '-1.jpg');
+      }
+
+      const fileUrl = `http://localhost:9999/uploads/${fileName}`;
+      const thumbnailUrl = `http://localhost:9999/uploads/thumbnails/${thumbnailName}`;
+
+      const document = await Document.create({
+        senderId: userId,
+        groupId: body.groupId,
+        documentUrl: fileUrl,
+        thumbnail: thumbnailUrl,
+        fileName: file.name,
+        fileExt: fileExt,
+        type: file?.mimetype,
+      });
+
+      savedDocuments.push(document);
+
+      const message = await GroupMessage.create({
+        senderId: userId,
+        groupId: body.groupId,
+        messageType: messageType,
+        document: document._id,
+      });
+    }
+
+    io.to(body.groupId).emit('document:new');
+
+    // Send global notification
+    const senderInfo = await User.findById({ _id: userId }).select(
+      'avatar firstName lastName',
+    );
+    const group = await Group.findById({ _id: body.groupId }).select('name');
+    const members = await UserGroup.find({ groupId: body.groupId });
+
+    // In this way we do exclude the all sockets related to this user and only provide this document notification to another users in this group
+    const recipitents = members.filter(
+      (member) => member.userId.toString() !== userId.toString(),
+    );
+    recipitents.forEach((recipitent) => {
+      io.to(`user:${recipitent.userId}`).emit('document:notification:new', {
+        senderInfo,
+        group,
+        documentCount: savedDocuments.length,
+      });
+    });
+  } else if (messageType === 'text') {
+    if (body.data.trim() === '') {
+      throw new ApiError(400, 'Text message is required');
+    }
+    const message = await GroupMessage.create({
+      senderId: userId,
+      groupId: body.groupId,
+      messageType: messageType,
+      data: body.data,
+    });
+
+    io.to(body.groupId).emit('text:new');
+
+    // Send global notification
+    const senderInfo = await User.findById({ _id: userId }).select(
+      'avatar firstName lastName',
+    );
+    const group = await Group.findById({ _id: body.groupId }).select('name');
+    const members = await UserGroup.find({ groupId: body.groupId });
+
+    // In this way we do exclude the all sockets related to this user and only provide this document notification to another users in this group
+    const recipitents = members.filter(
+      (member) => member.userId.toString() !== userId.toString(),
+    );
+    recipitents.forEach((recipitent) => {
+      io.to(`user:${recipitent.userId}`).emit('text:notification:new', {
+        senderInfo,
+        group,
+      });
+    });
+  }
+
+  return;
+};
+
 export const groupDetailService = async (groupId) => {
   const groupDetail = await Group.findById({ _id: groupId }).select(
     'name icon',
@@ -419,6 +577,23 @@ export const groupDataService = async ({ groupId, docsLimit, page }) => {
     page: page,
     docsLimit: docsLimit,
     totalPages: totalPages,
+  };
+};
+
+export const groupMessagesService = async ({ groupId, limit, page }) => {
+  const groupMessages = await GroupMessage.find({ groupId: groupId })
+    .populate('senderId', '_id firstName avatar')
+    .populate('document')
+    .sort({
+      createdAt: -1,
+    })
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  // logger.info(groupDetail[0]);
+
+  return {
+    groupMessages,
   };
 };
 
