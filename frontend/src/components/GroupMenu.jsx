@@ -22,7 +22,7 @@ const GroupMenu = ({
   return (
     <>
       {isMenuModalOpen && (
-        <div className=" min-w-sm w-full bg-fuchsia-100/20 p-4 rounded-lg backdrop-blur-3xl shadow-2xl/30 flex flex-col divide-y divide-gray-300">
+        <div className=" min-w-xs w-full bg-fuchsia-100/20 p-4 rounded-lg backdrop-blur-3xl shadow-2xl/30 flex flex-col divide-y divide-gray-300">
           <div
             title="Group Members"
             className="cursor-pointer flex items-center gap-2 bg-fuchsia-100/20 hover:bg-fuchsia-950/20 p-3 rounded-md"

@@ -12,9 +12,9 @@ export const uploadDocument = async ({ files, groupId }) => {
 
   formData.append('groupId', groupId);
 
-  const response = await api.post('/group/sendDocument', formData, {
+  const response = await api.post('/group/newGroupMessage', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 
-  return response.data;
+  return response;
 };

@@ -17,9 +17,8 @@ import { FaPlay } from 'react-icons/fa6';
 const DocsPreviewModal = ({
   setDocsPreviewModalOpen,
   filePreviews,
-  setFiles,
-  setFilePreviews,
-  handleDocumentSubmission,
+  onFileUpload,
+  handleSelectionDoc,
 }) => {
   return (
     <>
@@ -41,16 +40,7 @@ const DocsPreviewModal = ({
                   title={preview.file.name}
                 >
                   <div
-                    onClick={() => {
-                      setFiles((prev) =>
-                        prev.filter((item) => item.name !== preview.file.name),
-                      );
-                      setFilePreviews((prev) =>
-                        prev.filter(
-                          (item) => item.file.name !== preview.file.name,
-                        ),
-                      );
-                    }}
+                    onClick={() => handleSelectionDoc(preview)}
                     className="absolute top-0 right-0 bg-red-500 w-5 h-5 flex items-center justify-center rounded-bl-md p-1 z-1000 text-white cursor-pointer"
                     title="remove"
                   >
@@ -258,7 +248,7 @@ const DocsPreviewModal = ({
 
           <div className="flex items-end justify-end gap-4 p-4">
             <button
-              onClick={() => handleDocumentSubmission()}
+              onClick={onFileUpload}
               className="cursor-pointer bg-fuchsia-600 text-white p-1 px-6 rounded-md hover:bg-fuchsia-800 transition-all"
             >
               Upload
