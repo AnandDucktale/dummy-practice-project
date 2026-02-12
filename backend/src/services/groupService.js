@@ -423,6 +423,7 @@ export const newGroupMessageService = async (io, userId, body, documents) => {
     //   fs.mkdirSync(uploadDir, { recursive: true });
     // }
 
+    const messageId = [];
     for (const file of filteredFiles) {
       const fileExt = path.extname(file.name);
       const fileName = `document-${Date.now()}-${Math.random()
@@ -481,9 +482,13 @@ export const newGroupMessageService = async (io, userId, body, documents) => {
         messageType: messageType,
         document: document._id,
       });
+      messageId.push(message._id);
     }
 
-    io.to(body.groupId).emit('document:new');
+    const newMessage = await GroupMessage.find({ _id: { $in: messageId } })
+      .populate('senderId', '_id firstName avatar')
+      .populate('document');
+    io.to(body.groupId).emit('message:new', newMessage);
 
     // Send global notification
     const senderInfo = await User.findById({ _id: userId }).select(
@@ -497,7 +502,7 @@ export const newGroupMessageService = async (io, userId, body, documents) => {
       (member) => member.userId.toString() !== userId.toString(),
     );
     recipitents.forEach((recipitent) => {
-      io.to(`user:${recipitent.userId}`).emit('document:notification:new', {
+      io.to(`user:${recipitent.userId}`).emit('message:notification:new', {
         senderInfo,
         group,
         documentCount: savedDocuments.length,
@@ -514,7 +519,11 @@ export const newGroupMessageService = async (io, userId, body, documents) => {
       data: body.data,
     });
 
-    io.to(body.groupId).emit('text:new');
+    const newMessage = await GroupMessage.find({ _id: message._id })
+      .populate('senderId', '_id firstName avatar')
+      .populate('document');
+
+    io.to(body.groupId).emit('message:new', newMessage);
 
     // Send global notification
     const senderInfo = await User.findById({ _id: userId }).select(
@@ -528,7 +537,7 @@ export const newGroupMessageService = async (io, userId, body, documents) => {
       (member) => member.userId.toString() !== userId.toString(),
     );
     recipitents.forEach((recipitent) => {
-      io.to(`user:${recipitent.userId}`).emit('text:notification:new', {
+      io.to(`user:${recipitent.userId}`).emit('message:notification:new', {
         senderInfo,
         group,
       });
@@ -581,6 +590,8 @@ export const groupDataService = async ({ groupId, docsLimit, page }) => {
 };
 
 export const groupMessagesService = async ({ groupId, limit, page }) => {
+  // console.log(groupId, page, limit);
+
   const groupMessages = await GroupMessage.find({ groupId: groupId })
     .populate('senderId', '_id firstName avatar')
     .populate('document')
@@ -593,7 +604,7 @@ export const groupMessagesService = async ({ groupId, limit, page }) => {
   // logger.info(groupDetail[0]);
 
   return {
-    groupMessages,
+    groupMessages: groupMessages.reverse(),
   };
 };
 
@@ -672,10 +683,10 @@ export const leaveGroupService = async (user, userId, groupId) => {
     throw new ApiError(404, 'User does not found.');
   }
 
-  const deleteDocsAck = await Document.deleteMany({
-    groupId: groupId,
-    senderId: userId,
-  });
+  // const deleteDocsAck = await Document.deleteMany({
+  //   groupId: groupId,
+  //   senderId: userId,
+  // });
 
   return {
     isAdmin: false,

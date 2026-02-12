@@ -124,12 +124,6 @@ const GroupPageDocuments = ({
           <img src={audioPNG} alt="audio" className="w-20 h-20 object-cover" />
         )}
         {item.fileExt === '.mp4' && (
-          // <img
-          //   src={item.thumbnail}
-          //   alt="video"
-          //   className="w-20 h-20 object-cover"
-          // />
-          // <div>{item.thumbnail}</div>
           <div className="relative ">
             <img
               src={item.thumbnail}

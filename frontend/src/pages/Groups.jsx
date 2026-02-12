@@ -10,6 +10,7 @@ import NewGroupModal from '../components/modals/NewGroupModal';
 import api from '../api/axios';
 import useAuthStore from '../hooks/store/useAuthStore';
 import LoadingSpin from '../components/LoadingSpin';
+import NoData from '../components/NoData';
 
 const Groups = () => {
   const { user } = useAuthStore();
@@ -327,7 +328,9 @@ const Groups = () => {
           )}
 
           {!isLoading && groupList.length === 0 && !error && (
-            <NoData cause={`No groups available`} />
+            <div className="h-full flex justify-center items-center">
+              <NoData cause={`No groups available`} />
+            </div>
           )}
 
           {!isLoading && error && groupList.length === 0 && (
